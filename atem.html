@@ -1,0 +1,46 @@
+
+<!-- Settings Panel -->
+<script type="text/x-red" data-template-name="atem-atem">
+    <div class="form-row">
+        <label for="node-input-name"><i class="icon-tag"></i> Name</label>
+        <input type="text" id="node-input-name" placeholder="Name">
+    </div>
+    <div class="form-row">
+        <label for="node-input-network"><i class="icon-bookmark"></i> Network</label>
+        <input type="text" id="node-input-network">
+    </div>
+    <div class="form-row">
+        <label for="node-input-outputMode"><i class="icon-tag"></i> Output Mode:</label>
+        <select id="node-input-outputMode">
+            <option value=""></option>
+            <option value="reply">Only output reply</option>
+            <option value="status">Output only status updates</option>
+            <option value="all">Output everything</option>
+        </select>
+    </div>
+</script>
+
+<!-- Register -->
+<script type="text/javascript">
+    RED.nodes.registerType('atem-atem', {
+        category: 'BlackMagic',
+        color: '#fffbef',
+        defaults: {
+            name: {value: ""},
+            network: {value: "", required: true, type: "atem-network"},
+            outputMode: {value: "status", required: true}
+        },
+        inputs: 1,
+        outputs: 1,
+        icon: "kramer.png",
+        align: "right",
+        paletteLabel: "ATEM",
+        label: function() {
+            return this.name||"ATEM";
+        }
+    });
+</script>
+
+<!-- Information Panel -->
+<script type="text/x-red" data-help-name="atem-atem">
+</script>
