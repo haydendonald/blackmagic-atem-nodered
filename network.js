@@ -148,6 +148,7 @@ module.exports = function(RED)
                 else if(sendBuffer[0].timeout <= 1) {
                     sendBuffer[0].sender.sendStatus("red", "Failed", "Message failed to send: Timeout");
                     sendBuffer.pop(sendBuffer[0]);
+                    statusCallback("disconnected", "timeout");
                 }
                 else {
                     sendBuffer[0].timeout -= 1;
@@ -202,6 +203,14 @@ module.exports = function(RED)
             switch(state) {
                 case "connected": {
                     node.sendStatus("green", "Connected!");
+                    node.log("Connected to ATEM @ " + ipAddress);
+                    var command = {
+                        "payload": {
+                            "type": "status",
+                            "connectionStatus": "connected"
+                        }
+                    }
+                    messageCallback(command);
                     break;
                 }
                 case "got-data": {
@@ -223,7 +232,16 @@ module.exports = function(RED)
                     node.sendStatus("red", "Disconnected!");
                     node.error("Disconnected from ATEM @ " + ipAddress);
                     node.information.status = "disconnected";
-                
+                    clearInterval(pingCheck);
+                    node.information.connectionTimeout = 0;
+                    commands.close();
+                    var command = {
+                        "payload": {
+                            "type": "status",
+                            "connectionStatus": "disconnected"
+                        }
+                    }
+                    messageCallback(command);
 
                     //Close server and attempt reconnection
                     connect(ipAddress, port);
@@ -326,10 +344,14 @@ module.exports = function(RED)
                     //Check for inital conditions and load in the information otherwise sync
                     //Flag 1 >> 5 >> 1 (Done)
                     if(node.information.status != "connected") {
-                        if(flag == commands.flags.initializing && node.information.status == "connecting"){node.information.status = "initializing"; 
-                            statusCallback(node.information.status, "");}
-                        if(flag == commands.flags.sync && node.information.status == "initializing"){node.information.status = "connected"; 
-                            statusCallback(node.information.status, "");}
+                        if(flag == commands.flags.initializing && node.information.status == "connecting"){
+                            node.information.status = "initializing"; 
+                            statusCallback(node.information.status, "");
+                        }
+                        if(flag == commands.flags.sync && node.information.status == "initializing"){
+                            node.information.status = "connected"; 
+                            statusCallback(node.information.status, "");
+                        }
 
                         //Check if the command exists in the supported list
                         var cmd = commands.findCommand(name);

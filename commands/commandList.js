@@ -69,6 +69,7 @@ module.exports = {
     return null;
   },
   close(){
+    console.log("Close");
     for(var key in this.list) {
       this.list[key].close();
     }
