@@ -10,7 +10,6 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    if(flag != commandList.flags.sync){return false;}
     command.payload.cmd = this.cmd;
     command.payload.data.hour = data[0];
     command.payload.data.minute = data[1];
@@ -18,6 +17,7 @@ module.exports = {
     command.payload.data.frame = data[3];
 
     this.data = command.payload.data;
+    if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

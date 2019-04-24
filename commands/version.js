@@ -10,10 +10,10 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    if(flag != commandList.flags.sync){return false;}
     command.payload.cmd = this.cmd;
     command.payload.data.version = data.readUInt16BE(0) + "." + data.readUInt16BE(2);
     this.data.version = command.payload.data.version;
+    if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

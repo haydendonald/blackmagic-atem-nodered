@@ -11,7 +11,6 @@ module.exports = {
     this.processData(data, flag, command, commandList, false);
   },
   processData(data, flag, command, commandList, sendTallyUpdates=true) {
-    if(flag != commandList.flags.sync){return false;}
     command.payload.cmd = this.cmd;
 
     if(this.data["keyer" + ((data[0] * 10) + (data[1]))] == undefined) {
@@ -28,6 +27,7 @@ module.exports = {
 
     commandList.list.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyFill", this.data["keyer" + ((data[0] * 10) + (data[1]))].fillSource,  data[2] == 0x01, sendTallyUpdates);
     commandList.list.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyKey", this.data["keyer" + ((data[0] * 10) + (data[1]))].keySource,  data[2] == 0x01, sendTallyUpdates);
+    if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

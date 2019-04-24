@@ -11,12 +11,12 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    if(flag != commandList.flags.sync){return false;}
     this.data["auxSource" + data[0]] = {
       "inputSource": commandList.list.inputProperty.findInput(data.readUInt16BE(2))
     }
     command.payload.data = this.data;
     command.payload.cmd = this.cmd;
+    if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

@@ -11,13 +11,13 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    if(flag != commandList.flags.sync){return false;}
     command.payload.cmd = this.cmd;
     command.payload.data.ME = data[0];
     command.payload.data.inTransition = data[1] == 0x01;
     command.payload.data.framesRemaining = data[2];
     command.payload.data.position = data.readUInt16BE(4);
     this.data[command.payload.data.ME] = command.payload.data;
+    if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

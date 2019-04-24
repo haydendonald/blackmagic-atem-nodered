@@ -11,13 +11,12 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    if(flag != commandList.flags.initializing){return false;}
 
     //Put this data in the downstream keyer
     commandList.list.downstreamKeyer.addKeyerInformation(data[0], commandList.list.inputProperty.findInput(data.readUInt16BE(2)), 
       commandList.list.inputProperty.findInput(data.readUInt16BE(4)), commandList);
 
-
+    if(flag != commandList.flags.initializing){return false;}
     return true;
   },
   sendData(command, commandList) {
