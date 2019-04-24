@@ -6,11 +6,9 @@ Provides control and feedback from a Blackmagic ATEM device
 Please report any bugs that you may find. We will be using this in a automation system however won't be using all the functionality so tell me if you find any issues :) Below is some known issues.
 
 - A timeout is reported even though the command was sent successfully. This is due to the ATEM either not sending the achknowlegement or it being missed [Minor]
-- On redeploy sometimes the socket doesn't close correctly causing node red to crash [Major]
 - Needs a general clean up of information [Minor]
 - The ATEM sends out a large amount of data (eg when using the fader) that seems to cause node red to hang [Minor]
 - The longName and shortName fields of the inputs show garbage. This is because there needs to be a check to find the end of the string [Minor]
-
 
 ## Supported commands
 - Aux Source

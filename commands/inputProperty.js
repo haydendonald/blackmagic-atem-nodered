@@ -1,21 +1,27 @@
 //BUG:: Long name and shortname need to find their end as there is garbage at the end of it
 module.exports = {
   get: "InPr",
-  command: "inputProperty",
+  cmd: "inputProperty",
   data: {
     "inputs": {}
   },
+  close() {
+    this.data = {
+      "inputs": {}
+    };
+  },
   messageCallbacks: [],
   initializeData(data, flag, commandList, msgCallbacks) {
-    var command = {"payload":{}};
-    this.processData(data, command);
+    var command = {"payload":{"data":{}}};
+    this.processData(data, flag, command, commandList);
     messageCallbacks = msgCallbacks;
   },
-  processData(data, command, commandList) {
-    command.payload.id = data.readUInt16BE(0);
-    command.payload.longName = data.toString("UTF8", 2, 21);
-    command.payload.shortName = data.toString("UTF8", 22, 26);
-    command.payload.avalibleExternalPortTypes = {
+  processData(data, flag, command, commandList) {
+    if(flag != commandList.flags.sync){return false;}
+    command.payload.data.id = data.readUInt16BE(0);
+    command.payload.data.longName = data.toString("UTF8", 2, 21);
+    command.payload.data.shortName = data.toString("UTF8", 22, 26);
+    command.payload.data.avalibleExternalPortTypes = {
       "SDI": data[27].toString(2)[0] == "1",
       "HDMI": data[27].toString(2)[1] == "1",
       "Component": data[27].toString(2)[2] == "1",
@@ -31,7 +37,7 @@ module.exports = {
       4: "Composite", 
       5: "SVideo"
     };
-    command.payload.externalPortType = externalPortTypes[data[29]];
+    command.payload.data.externalPortType = externalPortTypes[data[29]];
 
     var portTypes = {
       0: "External",
@@ -45,9 +51,9 @@ module.exports = {
       129: "Auxilary",
       130: "Mask"
     }
-    command.payload.portType = portTypes[data[30]];
+    command.payload.data.portType = portTypes[data[30]];
     
-    command.payload.avaliability = {
+    command.payload.data.avaliability = {
       "Auxilary": data[32].toString(2)[0] == "1",
       "Multiviewer": data[32].toString(2)[1] == "1",
       "SuperSourceArt": data[32].toString(2)[2] == "1",
@@ -55,30 +61,63 @@ module.exports = {
       "KeySources": data[32].toString(2)[4] == "1",
     };
 
-    command.payload.MEAvaliability = {
+    command.payload.data.MEAvaliability = {
       "ME1PlusFillSources": data[33].toString(2)[0] == "1",
       "ME2PlusFillSources": data[33].toString(2)[1] == "1",
     };
 
-    command.payload.programTally = {
-      "ME": null,
-      "state": false
+    //Check if the input tallys exist if they do don't update the
+    if(this.data.inputs[command.payload.data.id] == undefined && this.data.inputs[command.payload.data.id] == null) {
+      command.payload.data.tallys = {};
+      command.payload.data.tallys.programTally = {
+        "ID": [],
+        "state": false
+      }
+
+      command.payload.data.tallys.previewTally = {
+        "ID": [],
+        "state": false
+      }
+
+      command.payload.data.tallys.downstreamKeyerTallyFill = {
+        "ID": [],
+        "state": false
+      }
+
+      command.payload.data.tallys.downstreamKeyerTallyKey = {
+        "ID": [],
+        "state": false
+      }
+
+      command.payload.data.tallys.upstreamKeyerTallyFill = {
+        "ID": [],
+        "state": false
+      }
+
+      command.payload.data.tallys.upstreamKeyerTallyKey = {
+        "ID": [],
+        "state": false
+      }
+    }
+    else {
+      command.payload.data.tallys.programTally = this.data.inputs[command.payload.data.id].tallys.programTally;
+      command.payload.data.tallys.previewTally = this.data.inputs[command.payload.data.id].tallys.previewTally;
+      command.payload.data.tallys.downstreamKeyerTallyFill = this.data.inputs[command.payload.data.id].tallys.downstreamKeyerTallyFill;
+      command.payload.data.tallys.downstreamKeyerTallyKey = this.data.inputs[command.payload.data.id].tallys.downstreamKeyerTallyKey;
+      command.payload.data.tallys.upstreamKeyerTallyFill = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyFill;
+      command.payload.data.tallys.upstreamKeyerTallyKey = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyKey;   
     }
 
-    command.payload.previewTally = {
-      "ME": null,
-      "state": false
-    }
-
-    this.data.inputs[command.payload.id] = command.payload;
-    command.payload.cmd = this.command;
+    this.data.inputs[command.payload.data.id] = command.payload.data;
+    command.payload.cmd = this.cmd;
+    return true;
   },
   sendData(command, commandList) {
     var msg = {
       "direction": "node",
       "command": {
         "payload": {
-          "cmd": this.command,
+          "cmd": this.cmd,
           "data": this.data
         }
       }
@@ -100,37 +139,105 @@ module.exports = {
       if(this.data.inputs[key].shortName == inputId) {return this.data.inputs[key];}
     }
   },
-  updateTallys(me, type, inputSource) {
+  updateTallysKeyer(id, type, inputSource, state, sendTallyUpdates) {
     if(inputSource == null || inputSource == undefined){return;}
-
-    //Find the last input that was live on this ME and remove it
     for(var key in this.data.inputs) {
-      if(this.data.inputs[key][type].ME == me) {
-        this.data.inputs[key][type].ME = null;
-        this.data.inputs[key][type].state = false;
-        for(var i in messageCallbacks) {
-          var msg = {
-            "payload": {
-              "data": this.data.inputs[key]
+      if(this.data.inputs[key].id == inputSource.id) {
+        for(var ID in this.data.inputs[key]["tallys"][type].ID) {
+            if(!state) {
+              this.data.inputs[key]["tallys"][type].ID.splice(ID, 1);
             }
+        }
+        if(state) {
+          if(!this.data.inputs[key]["tallys"][type].ID.includes(id)) {
+            this.data.inputs[key]["tallys"][type].ID.push(id);
           }
-          messageCallbacks[i](msg);
+        }
+
+        this.data.inputs[key]["tallys"][type].state = this.data.inputs[key]["tallys"][type].ID.length > 0;
+
+        var count = 0;
+        for(var key2 in this.data.inputs[key]["tallys"]) {
+          count += this.data.inputs[key]["tallys"][key2].ID.length;
+        }
+
+        this.data.inputs[key].tally = count > 0;
+
+        if(sendTallyUpdates) {
+          for(var i in messageCallbacks) {
+            var msg = {
+              "payload": {
+                "cmd": this.cmd,
+                "data": {}
+              }
+            }
+            msg.payload.data[key] = this.data.inputs[key];
+            messageCallbacks[i](msg);
+          }
         }
       }
     }
+  },
+  updateTallysME(id, type, inputSource, sendTallyUpdates) {
+    if(inputSource == null || inputSource == undefined){return;}
+    //Find the last input that was live on this ME and remove it
+    for(var key in this.data.inputs) {
+      var wasLive = false;
+      for(var ID in this.data.inputs[key]["tallys"][type].ID) {
+        if(this.data.inputs[key]["tallys"][type].ID[ID] == id && this.data.inputs[key].id != inputSource.id) {
+          wasLive = true;
+          this.data.inputs[key]["tallys"][type].ID.splice(ID, 1);
+        }
+      }
+      
+      this.data.inputs[key]["tallys"][type].state = this.data.inputs[key]["tallys"][type].ID.length > 0;
+
+      var count = 0;
+      for(var key2 in this.data.inputs[key]["tallys"]) {
+        count += this.data.inputs[key]["tallys"][key2].ID.length;
+      }
+
+      this.data.inputs[key].tally = count > 0;
+
+      if(sendTallyUpdates && wasLive) {
+        for(var i in messageCallbacks) {
+            var msg = {
+              "payload": {
+                "cmd": this.cmd,
+                "data": {}
+              }
+            }
+            msg.payload.data[key] = this.data.inputs[key];
+            messageCallbacks[i](msg);
+          }
+        }
+      }
+    
 
     //Make this current input live on the tally
     for(var key in this.data.inputs) {
       if(this.data.inputs[key].id == inputSource.id) {
-        this.data.inputs[key][type].ME = me;
-        this.data.inputs[key][type].state = true;
-        for(var i in messageCallbacks) {
-          var msg = {
-            "payload": {
-              "data": this.data.inputs[key]
+        this.data.inputs[key]["tallys"][type].ID.push(id);
+        this.data.inputs[key]["tallys"][type].state = true;
+
+        var count = 0;
+        for(var key2 in this.data.inputs[key]["tallys"]) {
+          count += this.data.inputs[key]["tallys"][key2].ID.length;
+        }
+
+        this.data.inputs[key].tally = count > 0;
+
+        if(sendTallyUpdates) {   
+          for(var i in messageCallbacks) {
+            var msg = {
+              "payload": {
+                "cmd": this.cmd,
+                "data": {}
+              }
             }
+            msg.payload.data[key] = this.data.inputs[key];
+            messageCallbacks[i](msg);
           }
-          messageCallbacks[i](msg);
         }
       }
     }

@@ -1,11 +1,15 @@
 module.exports = {
   get: "",
   set: "MAct",
-  command: "macroAction",
+  cmd: "macroAction",
   data: {},
+  close() {
+    this.data = {};
+  },
   initializeData(data, flag, commandList) {
   },
-  processData(data, command, commandList) {
+  processData(data, flag, command, commandList) {
+    return false;
   },
   sendData(command, commandList) {
     var error = null;
@@ -14,7 +18,7 @@ module.exports = {
       "name": this.set,
       "command": {
         "payload": {
-          "cmd": this.command,
+          "cmd": this.cmd,
           "data": this.data
         }
       }
@@ -46,7 +50,7 @@ module.exports = {
         "direction": "node",
         "command": {
           "payload": {
-            "cmd": this.command,
+            "cmd": this.cmd,
             "data": error
           }
         }

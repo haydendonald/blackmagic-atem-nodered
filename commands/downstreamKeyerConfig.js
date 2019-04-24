@@ -1,6 +1,7 @@
 module.exports = {
-  get: "_ver",
-  cmd: "version",
+  get: "DskB",
+  set: "",
+  cmd: "downstreamKeyerConfig",
   data: {},
   close() {
     this.data = {};
@@ -10,10 +11,13 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    if(flag != commandList.flags.sync){return false;}
-    command.payload.cmd = this.cmd;
-    command.payload.data.version = data.readUInt16BE(0) + "." + data.readUInt16BE(2);
-    this.data.version = command.payload.data.version;
+    if(flag != commandList.flags.initializing){return false;}
+
+    //Put this data in the downstream keyer
+    commandList.list.downstreamKeyer.addKeyerInformation(data[0], commandList.list.inputProperty.findInput(data.readUInt16BE(2)), 
+      commandList.list.inputProperty.findInput(data.readUInt16BE(4)), commandList);
+
+
     return true;
   },
   sendData(command, commandList) {
@@ -26,7 +30,6 @@ module.exports = {
         }
       }
     }
-    
     return msg;
   }
 }

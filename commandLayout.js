@@ -4,6 +4,7 @@
 //Receive
 var msg.payload = {
     "raw": {
+        "flag": "The flag of the packet that was sent",
         "length": "The length of the packet",
         "name": "The command name",
         "packet": "The raw packet"

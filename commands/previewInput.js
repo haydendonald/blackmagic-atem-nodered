@@ -1,18 +1,23 @@
 module.exports = {
   get: "PrvI",
   set: "CPvI",
-  command: "previewInput",
+  cmd: "previewInput",
   data: {},
+  close() {
+    this.data = {};
+  },
   initializeData(data, flag, commandList) {
     var command = {"payload":{"data":{}}};
-    this.processData(data, command, commandList);
+    this.processData(data, flag, command, commandList, false);
   },
-  processData(data, command, commandList) {
+  processData(data, flag, command, commandList, sendTallyUpdates=true) {
+    if(flag != commandList.flags.sync){return false;}
     command.payload.cmd = "programInput";
     command.payload.data.ME = data[0];
     command.payload.data.videoSource = commandList.list.inputProperty.findInput(data.readUInt16BE(2));
-    commandList.list.inputProperty.updateTallys(data[0], "previewTally", command.payload.data.videoSource);
+    commandList.list.inputProperty.updateTallysME(data[0], "previewTally", command.payload.data.videoSource, sendTallyUpdates);
     this.data[command.payload.data.ME] = command.payload.data;
+    return true;
   },
   sendData(command, commandList) {
     var error = null;
@@ -21,7 +26,7 @@ module.exports = {
       "name": this.set,
       "command": {
         "payload": {
-          "cmd": this.command,
+          "cmd": this.cmd,
           "data": "The data was not filled"
         }
       }
@@ -78,7 +83,7 @@ module.exports = {
         "direction": "node",
         "command": {
           "payload": {
-            "cmd": this.command,
+            "cmd": this.cmd,
             "data": error
           }
         }

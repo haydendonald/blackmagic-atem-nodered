@@ -45,7 +45,9 @@ module.exports = {
       upstreamKeyer: require("./upstreamKeyer.js"),
       downstreamKeyer: require("./downstreamKeyer.js"),
       auxSource: require("./auxSource.js"),
-      macroAction: require("./macroAction.js")
+      macroAction: require("./macroAction.js"),
+      downstreamKeyerConfig: require("./downstreamKeyerConfig.js"),
+      upstreamKeyerConfig: require("./upstreamKeyerConfig.js")
   },
   findFlag(id) {
     for(var key in this.flags) {
@@ -65,5 +67,10 @@ module.exports = {
         }
     }
     return null;
+  },
+  close(){
+    for(var key in this.list) {
+      this.list[key].close();
+    }
   }
 }

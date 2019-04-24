@@ -1,22 +1,33 @@
 module.exports = {
   get: "DskS",
   set: "CDsL",
-  command: "downstreamKeyer",
+  cmd: "downstreamKeyer",
   data: {},
+  close() {
+    this.data = {};
+  },
   initializeData(data, flag, commandList) {
     var command = {"payload":{"data":{}}};
-    this.processData(data, command, commandList);
+    this.processData(data, flag, command, commandList, false);
   },
-  processData(data, command, commandList) {
-    command.payload.cmd = this.command;
-    command.payload.data["keyer" + data[0]] = {
-      "onAir": data[1] == 0x01,
-      "inTransition" : data[2] == 0x01,
-      "isAutoTransitioning": data[3] == 0x01,
-      "framesRemaining": data[4]
-    }
+  processData(data, flag, command, commandList, sendTallyUpdates=true) {
+    if(flag != commandList.flags.sync){return false;}
+    command.payload.cmd = this.cmd;
 
-    this.data["keyer" + data[0]] = command.payload.data["keyer" + data[0]];
+    if(this.data["keyer" + data[0]] == undefined || this.data["keyer" + data[0]] == null) {
+      this.data["keyer" + data[0]] = {};
+      this.data["keyer" + data[0]].fillSource = undefined;
+      this.data["keyer" + data[0]].keySource = undefined;
+    }
+    this.data["keyer" + data[0]].onAir = data[1] == 0x01;
+    this.data["keyer" + data[0]].inTransition = data[2] == 0x01;
+    this.data["keyer" + data[0]].isAutoTransitioning = data[3] == 0x01;
+    this.data["keyer" + data[0]].framesRemaining = data[4];
+
+    commandList.list.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyFill", this.data["keyer" + data[0]].fillSource,  data[1] == 0x01, sendTallyUpdates);
+    commandList.list.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyKey", this.data["keyer" + data[0]].keySource,  data[1] == 0x01, sendTallyUpdates);
+    command.payload.data["keyer" + data[0]] = this.data["keyer" + data[0]];
+    return true;
   },
   sendData(command, commandList) {
     var error = null;
@@ -25,7 +36,7 @@ module.exports = {
       "name": this.set,
       "command": {
         "payload": {
-          "cmd": this.command,
+          "cmd": this.cmd,
           "data": "The data was not filled"
         }
       }
@@ -56,12 +67,22 @@ module.exports = {
         "direction": "node",
         "command": {
           "payload": {
-            "cmd": this.command,
+            "cmd": this.cmd,
             "data": error
           }
         }
       }
     }
     return msg;
+  },
+  //Add more keyer information
+  addKeyerInformation(keyerId, fillSource, keySource, commandList) {
+    var keyer = this.data["keyer" + keyerId];
+    if(keyer != undefined && keyer != null) {
+      keyer.fillSource = fillSource;
+      keyer.keySource = keySource;
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyFill", this.data["keyer" + keyerId].fillSource, keyer.onAir, false);
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyKey", this.data["keyer" + keyerId].keySource, keyer.onAir, false);
+    }
   }
 }

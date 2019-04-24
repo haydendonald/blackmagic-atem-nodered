@@ -43,8 +43,9 @@ module.exports = function(RED)
         //When the flows are stopped
         this.on("close", function() {
             clearInterval(pingCheck);
-            server.close();
             clearInterval(sendInterval);
+            server.close();
+            commands.close();
         });
 
         //Process incoming message object (this does no validation so this needs to be done before calling this fn)
@@ -134,7 +135,8 @@ module.exports = function(RED)
                 if(sendBuffer[0].timeout == 0) {
                     //Send the packet
                     if(server && node.information.status == "connected") {
-                        server.send(sendBuffer[0].packet, port, ipAddress);
+                        try{server.send(sendBuffer[0].packet, port, ipAddress);}
+                        catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
                         localPacketId++;
                         sendBuffer[0].timeout = 2;
                     }
@@ -239,7 +241,8 @@ module.exports = function(RED)
         function handshake() {
             var id = Math.round(Math.random() * 0x7FF);
             statusCallback("connecting", "");
-            server.send(commands.packets.requestHandshake, port, ipAddress);
+            try{server.send(commands.packets.requestHandshake, port, ipAddress);}
+            catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
 
             //Check for connection state
             pingCheck = setInterval(function() {
@@ -286,7 +289,10 @@ module.exports = function(RED)
                 buffer[4] = remotePacketId[0];
                 buffer[5] = remotePacketId[1];
                 buffer[9] = 0x41;
-                setTimeout(function(){server.send(buffer, port, ipAddress);}, 100);
+                setTimeout(function(){
+                    try{server.send(buffer, port, ipAddress);}
+                    catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
+                }, 100);
 
                 //Split a singular command into its parts
                 var commandMessage = message.slice(12, length); 
@@ -302,9 +308,10 @@ module.exports = function(RED)
                 for(var i = 0; i < cmds.length; i++) {
                     var command = {
                         "payload": {
-                            "flag": commands.findFlag(flag),
                             "type": undefined,
-                            "raw": {},
+                            "raw": {
+                                "flag": commands.findFlag(flag)
+                            },
                             "data": {}
                         }
                     }
@@ -334,13 +341,16 @@ module.exports = function(RED)
                         //Check if the command exists in the supported list
                         var cmd = commands.findCommand(name);
                         if(cmd != null) {
-                            cmd.processData(cmds[i].slice(8, length), command, commands);
+                            if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
+                                messageCallback(command);
+                                statusCallback("got-data", "");
+                            }
                         }
                         else {
                             command.payload.cmd = "raw";
+                            messageCallback(command);
+                            statusCallback("got-data", "");
                         }
-                        messageCallback(command);
-                        statusCallback("got-data", "");
                     }
                 }
 

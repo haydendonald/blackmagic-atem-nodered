@@ -1,18 +1,23 @@
 module.exports = {
   get: "AuxS",
   set: "CAuS",
-  command: "auxSource",
+  cmd: "auxSource",
   data: {},
+  close() {
+    this.data = {};
+  },
   initializeData(data, flag, commandList) {
     var command = {"payload":{"data":{}}};
-    this.processData(data, command, commandList);
+    this.processData(data, flag, command, commandList);
   },
-  processData(data, command, commandList) {
+  processData(data, flag, command, commandList) {
+    if(flag != commandList.flags.sync){return false;}
     this.data["auxSource" + data[0]] = {
       "inputSource": commandList.list.inputProperty.findInput(data.readUInt16BE(2))
     }
     command.payload.data = this.data;
-    command.payload.cmd = this.command;
+    command.payload.cmd = this.cmd;
+    return true;
   },
   sendData(command, commandList) {
     var error = null;
@@ -21,7 +26,7 @@ module.exports = {
       "name": this.set,
       "command": {
         "payload": {
-          "cmd": this.command,
+          "cmd": this.cmd,
           "data": "The data was not filled"
         }
       }
@@ -74,7 +79,7 @@ module.exports = {
         "direction": "node",
         "command": {
           "payload": {
-            "cmd": this.command,
+            "cmd": this.cmd,
             "data": error
           }
         }

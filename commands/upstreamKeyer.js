@@ -1,25 +1,34 @@
 module.exports = {
   get: "KeOn",
   set: "CKOn",
-  command: "upstreamKeyer",
+  cmd: "upstreamKeyer",
   data: {},
+  close() {
+    this.data = {};
+  },
   initializeData(data, flag, commandList) {
     var command = {"payload":{"data":{}}};
-    this.processData(data, command, commandList);
+    this.processData(data, flag, command, commandList, false);
   },
-  processData(data, command, commandList) {
-    command.payload.cmd = this.command;
-    command.payload.data.ME = data[0];
+  processData(data, flag, command, commandList, sendTallyUpdates=true) {
+    if(flag != commandList.flags.sync){return false;}
+    command.payload.cmd = this.cmd;
 
-    if(this.data[command.payload.data.ME] == undefined) {
-      this.data[command.payload.data.ME] = command.payload.data;
-      command.payload.data.keyers = {};
-      command.payload.data.keyers["keyer" + data[1]] = data[2] == 0x01;
+    if(this.data["keyer" + ((data[0] * 10) + (data[1]))] == undefined) {
+      this.data["keyer" + ((data[0] * 10) + (data[1]))] = {};
+      this.data["keyer" + ((data[0] * 10) + (data[1]))].fillSource = undefined;
+      this.data["keyer" + ((data[0] * 10) + (data[1]))].keySource = undefined;
     }
-    else {
-      this.data[command.payload.data.ME].keyers["keyer" + data[1]] = data[2] == 0x01;
-      command.payload.data.keyers = this.data[command.payload.data.ME].keyers;
-    }
+
+    this.data["keyer" + ((data[0] * 10) + (data[1]))].ME = data[0];
+    this.data["keyer" + ((data[0] * 10) + (data[1]))].id = data[1];
+    this.data["keyer" + ((data[0] * 10) + (data[1]))].state = data[2] == 0x01;
+
+    command.payload.data[["keyer" + ((data[0] * 10) + (data[1]))]] = this.data["keyer" + ((data[0] * 10) + (data[1]))];
+
+    commandList.list.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyFill", this.data["keyer" + ((data[0] * 10) + (data[1]))].fillSource,  data[2] == 0x01, sendTallyUpdates);
+    commandList.list.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyKey", this.data["keyer" + ((data[0] * 10) + (data[1]))].keySource,  data[2] == 0x01, sendTallyUpdates);
+    return true;
   },
   sendData(command, commandList) {
     var error = null;
@@ -28,7 +37,7 @@ module.exports = {
       "name": this.set,
       "command": {
         "payload": {
-          "cmd": this.command,
+          "cmd": this.cmd,
           "data": "The data was not filled"
         }
       }
@@ -64,12 +73,21 @@ module.exports = {
         "direction": "node",
         "command": {
           "payload": {
-            "cmd": this.command,
+            "cmd": this.cmd,
             "data": error
           }
         }
       }
     }
     return msg;
+  },
+  //Add more keyer information
+  addKeyerInformation(keyerId, fillSource, keySource, commandList) {
+    if(this.data["keyer" + keyerId] != undefined && this.data["keyer" + keyerId] != null) {
+      this.data["keyer" + keyerId].fillSource = fillSource;
+      this.data["keyer" + keyerId].keySource = keySource;
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyFill", this.data["keyer" + keyerId].fillSource,  this.data["keyer" + keyerId].onAir, false);
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyKey", this.data["keyer" + keyerId].keySource, this.data["keyer" + keyerId].onAir, false);
+    }
   }
 }
