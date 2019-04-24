@@ -112,6 +112,7 @@ module.exports = function(RED)
                 "packet": null,
                 "packetId": [parseInt(localPacketId/256), parseInt(localPacketId%256)],
                 "sender": sender,
+                "attempts": 1,
                 "timeout": 0
             }
 
@@ -132,22 +133,28 @@ module.exports = function(RED)
         //Send out all commands in the send buffer
         function processSendBuffer() {
             if(sendBuffer.length > 0) {
-                if(sendBuffer[0].timeout == 0) {
+                if(sendBuffer[0].timeout <= 0 && sendBuffer[0].attempts < 2) {
                     //Send the packet
                     if(server && node.information.status == "connected") {
+                        //Update the packet id
+                        sendBuffer[0].packetId = [parseInt(localPacketId/256), parseInt(localPacketId%256)];
+                        sendBuffer[0].packet[10] = sendBuffer[0].packetId[0];
+                        sendBuffer[0].packet[11] = sendBuffer[0].packetId[1];
+                        
                         try{server.send(sendBuffer[0].packet, port, ipAddress);}
                         catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
                         localPacketId++;
-                        sendBuffer[0].timeout = 2;
+                        sendBuffer[0].attempts++;
+                        sendBuffer[0].timeout = 5;
                     }
                     else {
                         sendBuffer[0].sender.sendStatus("red", "Failed", "Message failed to send: Not connected");
-                        sendBuffer.pop(sendBuffer[0]);
+                        sendBuffer.slice(0, 1);
                     }
                 }
-                else if(sendBuffer[0].timeout <= 1) {
+                else if(sendBuffer[0].timeout <= 0) {
                     sendBuffer[0].sender.sendStatus("red", "Failed", "Message failed to send: Timeout");
-                    sendBuffer.pop(sendBuffer[0]);
+                    sendBuffer = [];
                     statusCallback("disconnected", "timeout");
                 }
                 else {
@@ -173,7 +180,6 @@ module.exports = function(RED)
 
             //Attempt handshake
             server.bind(port);
-            //setTimeout(function(){handshake()}, 1000); //Wait 1 seconds to handshake as the data coming in crashes node red
             handshake();
         }
 
@@ -277,7 +283,7 @@ module.exports = function(RED)
             server.on("message", processIncomingMessage);
         }
 
-        //Process the message sent by the ATEM                                                          BUG:: sometimes the atem doesn't reply as expected and creates a false timeout error
+        //Process the message sent by the ATEM                                                        
         function processIncomingMessage(message, rinfo) {
             var length = ((message[0] & 0x07) << 8) | message[1];
             if(length == rinfo.size) {
@@ -286,17 +292,7 @@ module.exports = function(RED)
                 var remotePacketId = [message[10], message[11]];
 
                 //Check if a packet was processed
-                if(message[0] == 0x80 && message[1] == 0x0C) {
-                    if(message[2] == sessionId[0] && message[3] == sessionId[1]) {
-                        for(var i in sendBuffer) {
-                            if(sendBuffer[i].packetId[0] == message[4] && sendBuffer[i].packetId[1] == message[5]) {
-                                //Sent successfully!
-                                sendBuffer[i].sender.sendStatus("green", "Success!", "");
-                                sendBuffer.pop(sendBuffer[i]);
-                            }
-                        }
-                    }
-                }
+                sendBuffer.splice(0, 1);
 
                 //Reply to each command
                 var buffer = new Buffer.alloc(12).fill(0);
