@@ -25,6 +25,7 @@ module.exports = {
     }
 
     if(command.payload.data.macroId == undefined || command.payload.data.macroId == null){error="macroId parameter is missing";}
+    if(command.payload.data.action == undefined || command.payload.data.action == null){error="action parameter is missing";}
     var action = null;
     switch(command.payload.data.action.toLowerCase()) {
       case "run": {action = 0x00; break;}

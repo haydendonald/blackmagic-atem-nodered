@@ -7,7 +7,7 @@ module.exports = {
   },
   close() {
     this.data = {
-      "inputs": {}
+      "inputs": {},
     };
   },
   messageCallbacks: [],
@@ -17,7 +17,6 @@ module.exports = {
     messageCallbacks = msgCallbacks;
   },
   processData(data, flag, command, commandList) {
-    if(flag != commandList.flags.sync){return false;}
     command.payload.data.id = data.readUInt16BE(0);
     command.payload.data.longName = data.toString("UTF8", 2, 21);
     command.payload.data.shortName = data.toString("UTF8", 22, 26);
@@ -67,7 +66,7 @@ module.exports = {
     };
 
     //Check if the input tallys exist if they do don't update the
-    if(this.data.inputs[command.payload.data.id] == undefined && this.data.inputs[command.payload.data.id] == null) {
+    if(this.data.inputs[command.payload.data.id] == undefined || this.data.inputs[command.payload.data.id] == null) {
       command.payload.data.tallys = {};
       command.payload.data.tallys.programTally = {
         "ID": [],
@@ -100,6 +99,7 @@ module.exports = {
       }
     }
     else {
+      command.payload.data.tallys = {};
       command.payload.data.tallys.programTally = this.data.inputs[command.payload.data.id].tallys.programTally;
       command.payload.data.tallys.previewTally = this.data.inputs[command.payload.data.id].tallys.previewTally;
       command.payload.data.tallys.downstreamKeyerTallyFill = this.data.inputs[command.payload.data.id].tallys.downstreamKeyerTallyFill;
@@ -107,7 +107,7 @@ module.exports = {
       command.payload.data.tallys.upstreamKeyerTallyFill = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyFill;
       command.payload.data.tallys.upstreamKeyerTallyKey = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyKey;   
     }
-
+    if(flag != commandList.flags.sync){return false;}
     this.data.inputs[command.payload.data.id] = command.payload.data;
     command.payload.cmd = this.cmd;
     return true;

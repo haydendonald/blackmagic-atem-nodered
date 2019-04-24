@@ -26,5 +26,28 @@ var msg.payload = {
 
 
 
+//Macro Action
+//This will run macro 0
+var msg = {
+    "payload": {
+        "cmd": "macroAction",
+        "data": {
+            "macroId": 0,
+            "action": "run"
+        }
+    }
+}
 
 
+//Program Input
+//This will put input 0 on ME 0
+var msg = {
+    "payload": {
+        "cmd": "programInput",
+        "data": {
+            "videoSource": {
+                "id": 0
+            }
+        }
+    }
+}

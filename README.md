@@ -22,6 +22,7 @@ Please report any bugs that you may find. We will be using this in a automation 
 - Transition Position
 - Version
 - Raw Commands
+- Tallying on the MEs and Keyers
 
 Thanks to SKAARHOJ for the research into the commands! This is also where you can find a detail listing if you wish to use the raw command feature
 [SKAARHOJ BMD Protocol](https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html)
