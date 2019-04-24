@@ -1,7 +1,4 @@
-var util = require('util');
-var isBuffer = Buffer.isBuffer;
 var udp = require('dgram');
-var crc = require('crc').crc16xmodem;
 var ping = require("ping");
 var commands = require("./commands/commandList.js");
 
