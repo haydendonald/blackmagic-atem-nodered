@@ -177,7 +177,7 @@ module.exports = function(RED)
 
             //Attempt handshake
             server.bind(port);
-            handshake();
+            setTimeout(function(){handshake();}, 5000);
         }
 
         //Send a message to the subscribed nodes (appears on the flow)
@@ -337,7 +337,11 @@ module.exports = function(RED)
                     //Check for inital conditions and load in the information otherwise sync
                     //Flag 1 >> 5 >> 1 (Done)
                     if(node.information.status != "connected") {
-                        if(flag == commands.flags.initializing && node.information.status == "connecting"){
+                        if(flag == commands.flags.connect) {
+                            try{server.send(commands.packets.handshakeAnswerback, port, ipAddress);}
+                            catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
+                        }
+                        else if(flag == commands.flags.initializing && node.information.status == "connecting"){
                             node.information.status = "initializing"; 
                             statusCallback(node.information.status, "");
                         }
