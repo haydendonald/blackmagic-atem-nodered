@@ -5,7 +5,8 @@ Provides control and feedback from a Blackmagic ATEM device
 ## Currently in testing
 Please report any bugs that you may find. We will be using this in a automation system however won't be using all the functionality so tell me if you find any issues :) Below is some known issues.
 
-- The ATEM sends out a large amount of data (eg when using the fader) that seems to cause node red to hang [Minor]
+- When connecting the user can still ask for inputs and this will return empty
+- Handlle disconnections more obviously on the node side
 - The longName and shortName fields of the inputs show garbage. This is because there needs to be a check to find the end of the string [Minor]
 
 ## Supported commands
