@@ -110,6 +110,9 @@ module.exports = {
 
     this.data.inputs[command.payload.data.id] = command.payload.data;
     command.payload.cmd = this.cmd;
+    command.payload.data = this.data;
+    //command.payload.data[data.readUInt16BE(0)] = this.data.inputs[data.readUInt16BE(0)];
+
     if(flag != commandList.flags.sync){return false;}
     return true;
   },
@@ -169,10 +172,10 @@ module.exports = {
             var msg = {
               "payload": {
                 "cmd": this.cmd,
-                "data": {}
+                "data": this.data
               }
             }
-            msg.payload.data[key] = this.data.inputs[key];
+            //msg.payload.data[key] = this.data.inputs[key];
             messageCallbacks[i](msg);
           }
         }
@@ -205,10 +208,10 @@ module.exports = {
             var msg = {
               "payload": {
                 "cmd": this.cmd,
-                "data": {}
+                "data": this.data
               }
             }
-            msg.payload.data[key] = this.data.inputs[key];
+            //msg.payload.data[key] = this.data.inputs[key];
             messageCallbacks[i](msg);
           }
         }
@@ -233,10 +236,10 @@ module.exports = {
             var msg = {
               "payload": {
                 "cmd": this.cmd,
-                "data": {}
+                "data": this.data
               }
             }
-            msg.payload.data[key] = this.data.inputs[key];
+            //msg.payload.data[key] = this.data.inputs[key];
             messageCallbacks[i](msg);
           }
         }
