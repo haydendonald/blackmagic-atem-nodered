@@ -17,6 +17,9 @@ module.exports = {
     command.payload.data.framesRemaining = data[2];
     command.payload.data.position = data.readUInt16BE(4);
     this.data[command.payload.data.ME] = command.payload.data;
+
+    //Pass this information to the current live inputs on the ME
+    commandList.list.inputProperty.updateTallysTransitionPosition(data[0]);
     if(flag != commandList.flags.sync){return false;}
     return true;
   },

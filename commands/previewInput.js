@@ -16,7 +16,7 @@ module.exports = {
     command.payload.data.videoSource = commandList.list.inputProperty.findInput(data.readUInt16BE(2));
     commandList.list.inputProperty.updateTallysME(data[0], "previewTally", command.payload.data.videoSource, sendTallyUpdates);
     this.data[command.payload.data.ME] = command.payload.data;
-    if(flag != commandList.flags.sync){return false;}
+    //if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

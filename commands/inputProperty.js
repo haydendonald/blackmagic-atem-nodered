@@ -245,5 +245,30 @@ module.exports = {
         }
       }
     }
+  },
+  updateTallysTransitionPosition(ME) {
+   // var onProgram = false;
+    //var onPreview = false;
+    for(var key in this.data.inputs) {
+      // //Program
+      // for(var i in this.data.inputs[key].tallys.programTally.ID) {
+      //   if(this.data.inputs[key].tallys.programTally.ID[i] == ME){
+
+      //   }
+      // }
+
+
+      for(var i in this.data.inputs[key].tallys.previewTally.ID) {
+        if(this.data.inputs[key].tallys.previewTally.ID[i] == ME){
+          this.data.inputs[key].tallys.previewTally.ID.splice(ME, 1);
+          this.data.inputs[key].tallys.previewTally.state = this.data.inputs[key].tallys.previewTally.ID.length > 0;
+
+          if(!this.data.inputs[key].tallys.programTally.ID.includes(ME)) {
+            this.data.inputs[key].tallys.programTally.ID.push(ME);
+            this.data.inputs[key].tallys.programTally.state = true;
+          }
+        }
+      } 
+    }
   }
 }
