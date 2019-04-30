@@ -107,9 +107,10 @@ module.exports = {
       command.payload.data.tallys.upstreamKeyerTallyFill = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyFill;
       command.payload.data.tallys.upstreamKeyerTallyKey = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyKey;   
     }
-    if(flag != commandList.flags.sync){return false;}
+    
     this.data.inputs[command.payload.data.id] = command.payload.data;
     command.payload.cmd = this.cmd;
+    if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {
