@@ -50,58 +50,60 @@ module.exports = function(RED)
             if(node.information.status !== "connected") {
                 node.sendStatus("red", "Not Connected!", "Not connected yet, please wait!");
             }
-            var cmd = commands.findCommand(msg.payload.cmd);
-            if(cmd == null) {
-                if(msg.payload.cmd.toUpperCase() == "RAW") {
-                    //Build the raw packet to be sent
-
-                    //If the user has defined a name for the command add it to the start of the packet
-                    try {
-                        var nameBuffer = new Buffer.from(msg.payload.data.name);
-                        msg.payload.data.packet = Buffer.concat([nameBuffer, msg.payload.data.packet]);
-                    }
-                    catch(error){}
-                    sendBuffer.push(generatePacket(msg.payload.data.packet, sender));
-                }
-                else {
-                    node.sendStatus("red", "Unknown Command", "Unknown command: " + msg.payload.cmd);
-                    return;
-                }
-            }
             else {
-                var success = cmd.sendData(msg, commands);
-                if(success != null) {
-                    switch(success.direction) {
-                        //The data was stored and should just be returned
-                        case "node": {
-                            if(success.command != null) {
-                                if(typeof success.command.payload.data === "string" || success.command.payload.data instanceof String) {
-                                    node.sendStatus("red", "Internal Error", success.command.payload.data);
-                                }
-                                else {
-                                    messageCallback(success.command);
-                                }
-                            }
-                            else {node.sendStatus("red", "Internal Error", "The returned data was null");}
-                            break;
-                        }
-                        //The data needs to be requested from the server
-                        case "server": {
-                            //Generate the packet
-                            var nameBuffer = new Buffer.from(success.name);
-                            sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]), sender));
-                            node.sendStatus("yellow", "Sending...", "");
-                            break;
-                        }
-                        default: {
-                            console.log("Internal Error: Unsupported direction");
-                            break;
-                        }
-                    }
+                var cmd = commands.findCommand(msg.payload.cmd);
+                if(cmd == null) {
+                    if(msg.payload.cmd.toUpperCase() == "RAW") {
+                        //Build the raw packet to be sent
 
+                        //If the user has defined a name for the command add it to the start of the packet
+                        try {
+                            var nameBuffer = new Buffer.from(msg.payload.data.name);
+                            msg.payload.data.packet = Buffer.concat([nameBuffer, msg.payload.data.packet]);
+                        }
+                        catch(error){}
+                        sendBuffer.push(generatePacket(msg.payload.data.packet, sender));
+                    }
+                    else {
+                        node.sendStatus("red", "Unknown Command", "Unknown command: " + msg.payload.cmd);
+                        return;
+                    }
                 }
                 else {
-                    node.sendStatus("red", "Internal Error", "The packet was null");
+                    var success = cmd.sendData(msg, commands);
+                    if(success != null) {
+                        switch(success.direction) {
+                            //The data was stored and should just be returned
+                            case "node": {
+                                if(success.command != null) {
+                                    if(typeof success.command.payload.data === "string" || success.command.payload.data instanceof String) {
+                                        node.sendStatus("red", "Internal Error", success.command.payload.data);
+                                    }
+                                    else {
+                                        messageCallback(success.command);
+                                    }
+                                }
+                                else {node.sendStatus("red", "Internal Error", "The returned data was null");}
+                                break;
+                            }
+                            //The data needs to be requested from the server
+                            case "server": {
+                                //Generate the packet
+                                var nameBuffer = new Buffer.from(success.name);
+                                sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]), sender));
+                                node.sendStatus("yellow", "Sending...", "");
+                                break;
+                            }
+                            default: {
+                                console.log("Internal Error: Unsupported direction");
+                                break;
+                            }
+                        }
+
+                    }
+                    else {
+                        node.sendStatus("red", "Internal Error", "The packet was null");
+                    }
                 }
             }
         }
