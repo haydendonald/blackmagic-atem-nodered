@@ -14,6 +14,14 @@ module.exports = {
     command.payload.cmd = this.cmd;
     command.payload.data.ME = data[0];
     command.payload.data.videoSource = commandList.list.inputProperty.findInput(data.readUInt16BE(2));
+
+    //Add the transition position params if they don't exist
+    if(this.data[command.payload.data.ME] == undefined || this.data[command.payload.data.ME] == null) {
+      command.payload.data.inTransition = false;
+      command.payload.data.framesRemaining = false;
+      command.payload.data.position = false;
+    }
+    
     commandList.list.inputProperty.updateTallysME(data[0], "previewTally", command.payload.data.videoSource, sendTallyUpdates);
     this.data[command.payload.data.ME] = command.payload.data;
     command.payload.data = this.data;
@@ -91,5 +99,11 @@ module.exports = {
       }
     }
     return msg;
+  },
+  //Update the transition position
+  updateTransitionPosition(ME, inTransition, framesRemaining, position) {
+    this.data[ME].inTransition = inTransition;
+    this.data[ME].framesRemaining = framesRemaining;
+    this.data[ME].position = position;
   }
 }

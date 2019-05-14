@@ -67,6 +67,10 @@ module.exports = {
 
     //Check if the input tallys exist if they do don't update the
     if(this.data.inputs[command.payload.data.id] == undefined || this.data.inputs[command.payload.data.id] == null) {
+      command.payload.data.inTransition = false;
+      command.payload.data.framesRemaining = false;
+      command.payload.data.position = false;
+
       command.payload.data.tallys = {};
       command.payload.data.tallys.programTally = {
         "ID": [],
@@ -113,7 +117,7 @@ module.exports = {
     command.payload.data = this.data;
     //command.payload.data[data.readUInt16BE(0)] = this.data.inputs[data.readUInt16BE(0)];
 
-    if(flag != commandList.flags.sync){return false;}
+    //if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {
@@ -211,7 +215,6 @@ module.exports = {
                 "data": this.data
               }
             }
-            //msg.payload.data[key] = this.data.inputs[key];
             messageCallbacks[i](msg);
           }
         }
@@ -239,36 +242,28 @@ module.exports = {
                 "data": this.data
               }
             }
-            //msg.payload.data[key] = this.data.inputs[key];
             messageCallbacks[i](msg);
           }
         }
       }
     }
   },
-  updateTallysTransitionPosition(ME) {
-   // var onProgram = false;
-    //var onPreview = false;
-    for(var key in this.data.inputs) {
-      // //Program
-      // for(var i in this.data.inputs[key].tallys.programTally.ID) {
-      //   if(this.data.inputs[key].tallys.programTally.ID[i] == ME){
-
-      //   }
-      // }
-
-
+  updateTallysTransitionPosition(ME, inTransition, framesRemaining, position) {
+     for(var key in this.data.inputs) {
+      var MEExists = false;
+      for(var i in this.data.inputs[key].tallys.programTally.ID) {
+        if(i == ME){MEExists = true;}
+      }
       for(var i in this.data.inputs[key].tallys.previewTally.ID) {
-        if(this.data.inputs[key].tallys.previewTally.ID[i] == ME){
-          this.data.inputs[key].tallys.previewTally.ID.splice(ME, 1);
-          this.data.inputs[key].tallys.previewTally.state = this.data.inputs[key].tallys.previewTally.ID.length > 0;
+        if(i == ME){MEExists = true;}
+      }
 
-          if(!this.data.inputs[key].tallys.programTally.ID.includes(ME)) {
-            this.data.inputs[key].tallys.programTally.ID.push(ME);
-            this.data.inputs[key].tallys.programTally.state = true;
-          }
-        }
-      } 
+      if(MEExists == true) {
+        if(framesRemaining < 1) {inTransition = false;}
+        this.data.inputs[key].inTransition = inTransition;
+        this.data.inputs[key].framesRemaining = framesRemaining;
+        this.data.inputs[key].position = position;
+      }
     }
   }
 }

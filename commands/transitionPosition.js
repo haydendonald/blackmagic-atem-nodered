@@ -19,8 +19,11 @@ module.exports = {
     this.data[command.payload.data.ME] = command.payload.data;
 
     //Pass this information to the current live inputs on the ME
-    commandList.list.inputProperty.updateTallysTransitionPosition(data[0]);
-    if(flag != commandList.flags.sync){return false;}
+    commandList.list.programInput.updateTransitionPosition(data[0], data[1] == 0x01, data[2], data.readUInt16BE(4));
+    commandList.list.previewInput.updateTransitionPosition(data[0], data[1] == 0x01, data[2], data.readUInt16BE(4));
+    commandList.list.inputProperty.updateTallysTransitionPosition(data[0], data[1] == 0x01, data[2], data.readUInt16BE(4));
+    command.payload.data = this.data;
+    //if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {
