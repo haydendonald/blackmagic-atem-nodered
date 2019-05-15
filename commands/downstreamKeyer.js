@@ -25,8 +25,9 @@ module.exports = {
 
     commandList.list.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyFill", this.data["keyer" + data[0]].fillSource,  data[1] == 0x01, sendTallyUpdates);
     commandList.list.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyKey", this.data["keyer" + data[0]].keySource,  data[1] == 0x01, sendTallyUpdates);
-    command.payload.data["keyer" + data[0]] = this.data["keyer" + data[0]];
-    if(flag != commandList.flags.sync){return false;}
+    //command.payload.data["keyer" + data[0]] = this.data["keyer" + data[0]];
+    command.payload.data = this.data;
+    //if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

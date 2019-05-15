@@ -48,7 +48,7 @@ module.exports = function(RED)
         //Process incoming message object (this does no validation so this needs to be done before calling this fn)
         this.send = function(msg, sender) {
             if(node.information.status !== "connected") {
-                node.sendStatus("red", "Not Connected!", "Not connected yet, please wait!");
+                node.sendStatus("red", "Not Connected!", "");
             }
             else {
                 var cmd = commands.findCommand(msg.payload.cmd);

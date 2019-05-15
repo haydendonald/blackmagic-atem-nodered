@@ -23,11 +23,13 @@ module.exports = {
     this.data["keyer" + ((data[0] * 10) + (data[1]))].id = data[1];
     this.data["keyer" + ((data[0] * 10) + (data[1]))].state = data[2] == 0x01;
 
-    command.payload.data[["keyer" + ((data[0] * 10) + (data[1]))]] = this.data["keyer" + ((data[0] * 10) + (data[1]))];
+    //command.payload.data[["keyer" + ((data[0] * 10) + (data[1]))]] = this.data["keyer" + ((data[0] * 10) + (data[1]))];
 
     commandList.list.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyFill", this.data["keyer" + ((data[0] * 10) + (data[1]))].fillSource,  data[2] == 0x01, sendTallyUpdates);
     commandList.list.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyKey", this.data["keyer" + ((data[0] * 10) + (data[1]))].keySource,  data[2] == 0x01, sendTallyUpdates);
-    if(flag != commandList.flags.sync){return false;}
+    
+    command.payload.data = this.data;
+    //if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {
