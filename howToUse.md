@@ -1,6 +1,6 @@
-#How to Use
+# How to Use
 In general the operation of the node is dependent on the ATEM it's self. This node stores information such as the input properties, keyer information etc but the ATEM is expected to update the information stored. The node is seperated into several commands that can be performed that all follow the research by SKAARHOJ found at https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html.
-##General command layout
+## General command layout
 The general command layout is the same for most functions as seen below. In general the "raw" part of the command defines the raw information passed by the ATEM. The "cmd" portion defines what command has been found and processed with the "data" being the outputted information from the supported command.
 ```
 //Received Information Format
@@ -26,10 +26,10 @@ var msg.payload = {
 ```
 
 ## Macro Action
-###cmd = "macroAction"
-###macroId = the macro id
+### cmd = "macroAction"
+### macroId = the macro id
 Integer of the macro id starting at 0
-###action = the type of action
+### action = the type of action
 - "run" - Runs the command
 - "stop" - Stops the command
 - "stoprecording" - Stops recoding a macro
