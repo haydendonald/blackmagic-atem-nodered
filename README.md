@@ -30,8 +30,7 @@ Thanks to SKAARHOJ for the research into the commands! This is also where you ca
 [SKAARHOJ BMD Protocol](https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html)
 
 ## How to Use
-In general just put a message node on the output and press buttons on the ATEM to find the values you wishing to get out of the ATEM.
-I'll write up some proper documentation soon!
+[How to use](https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html)
 
 ## Special Thanks
 - Thanks to [SKAARHOJ](https://www.skaarhoj.com/) for the research and listing of the commands to control the ATEM
