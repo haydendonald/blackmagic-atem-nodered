@@ -13,14 +13,14 @@ var msg.payload = {
         "packet": "The raw packet"
     },
     "data": {
-        "The data outputted by a supported Command"
+        "The data outputted by a supported Command."
     },
 }
 //Send Information Format
 var msg.payload = {
     "cmd": "The command",
     "data": {
-        "The data outputted by a supported Command"
+        "The data outputted by a supported Command. Note if this is empty it will return allstored data"
     },
 }
 ```
@@ -28,6 +28,25 @@ var msg.payload = {
 ## Example setting the program input to 0 on ME 0
 ```
 [{"id":"78488d8.fa1d574","type":"function","z":"4ecf69fc.958c48","name":"Change Program Input On ME 0 To Input 1","func":"var msg1 = {\n    \"payload\": {\n        \"cmd\": \"programInput\",\n        \"data\": {\n            \"ME\": 0,\n            \"videoSource\": {\n                \"id\": 0\n            }\n        }\n    }\n}\nreturn msg1;","outputs":1,"noerr":0,"x":611,"y":180,"wires":[["6e96c850.4b84c8"]]},{"id":"6e96c850.4b84c8","type":"atem-atem","z":"4ecf69fc.958c48","name":"ATEM","network":"3260f992.1b9866","outputMode":"all","x":858,"y":179,"wires":[["a9196221.5360f"]]},{"id":"2b3e1a40.2130e6","type":"inject","z":"4ecf69fc.958c48","name":"","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"x":348,"y":180,"wires":[["78488d8.fa1d574"]]},{"id":"a9196221.5360f","type":"debug","z":"4ecf69fc.958c48","name":"","active":true,"console":"false","complete":"false","x":1019,"y":179,"wires":[]},{"id":"b9195ab8.f950f8","type":"comment","z":"4ecf69fc.958c48","name":"Remember to change the ip address","info":"Open ATEM and edit the network and set \nthe ip address of the atem.\n\nThe IP Address can be found in the ATEM setup utility","x":862.5,"y":129,"wires":[]},{"id":"3260f992.1b9866","type":"atem-network","z":"","name":"Test ATEM","ipAddress":"0.0.0.0"}]
+```
+
+## Raw Command
+Performs a raw command to the ATEM. The commands can be found at https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html.
+### cmd = "raw"
+### name = The name of the command to be passed
+### packet = The raw buffer of the packet to be sent
+
+```
+//This will set ME 0 to input 0
+var msg = {
+    "payload": {
+        "cmd": "raw",
+        "data": {
+            "name": "CPgI",
+            "packet": new Buffer.from([0, 0, 0, 0])
+        }
+    }
+}
 ```
 
 ## Program Input
@@ -56,7 +75,105 @@ var msg = {
 }
 ```
 
+## Preview Input
+Changes the preview input on a ME
+### cmd = "previewInput"
+### ME = The ME to perform the action on
+Where the MEs start at 0. So ME 1 is 0
+### videoSource = The video source to change the ME to
+This can contain either the id, shortName or longName
+Integer of the macro id starting at 0
 
+```
+//This will set input 0 (Blk) to ME 0
+var msg = {
+    "payload": {
+        "cmd": "previewInput",
+        "data": {
+            "ME": 0,
+            "videoSource": {
+                id: 0,
+                shortName: "blk",
+                longName: "black" //(Only one of the above is requred)
+            }
+        }
+    }
+}
+```
+
+## Input Property
+Gets the properties of a input
+### cmd = "inputProperty"
+### id = The id of the input
+### longName = The long name of the input
+### shortName = The short name of the input
+### avaliableExternalPortTypes = The avaliable external port types for the input
+### externalPortTypes = The external port types set to the input
+### portType = The port type of the input
+### avaliability = The avaliability of the input
+### MEAvaliabiity = The avaliability for MEs for the input
+### inTransition = The input is in transition somewhere
+### framesRemaining = If the input is in transition how many frames are left
+### position = If the input is in transition what is the fader position
+### tallys = The list of tallys
+### tallys.programTally.state = If the input is live on the program on a ME
+### tallys.programTally.ID = What ME the input is live on
+### tallys.previewTally.state = If the input is live on the preview on a ME
+### tallys.previewTally.ID = What ME the input is live on
+### tallys.downstreamKeyerTallyFill.state = If the input is live on the keyer
+### tallys.downstreamKeyerTallyFill.ID = What keyer it is live on
+### tallys.downstreamKeyerTallyKey.state = If the input is live on the keyer
+### tallys.downstreamKeyerTallyKey.ID = What keyer it is live on
+### tallys.upstreamKeyerTallyFill.state = If the input is live on the keyer
+### tallys.upstreamKeyerTallyFill.ID = What keyer it is live on
+### tallys.upstreamKeyerTallyKey.state = If the input is live on the keyer
+### tallys.upstreamKeyerTallyKey.ID = What keyer it is live on
+
+```
+//This will ask for all input properties
+var msg = {
+    "payload": {
+        "cmd": "inputProperty",
+        "data": {}
+    }
+}
+```
+
+## Perform Cut
+Performs a cut transition on a ME
+### cmd = "performCut"
+### ME = The ME to perform the action on
+Where the MEs start at 0. So ME 1 is 0
+
+```
+//This will perform a cut on ME 0
+var msg = {
+    "payload": {
+        "cmd": "performCut",
+        "data": {
+            "ME": 0
+        }
+    }
+}
+```
+
+## Perform Auto
+Performs a auto transition on a ME
+### cmd = "performAuto"
+### ME = The ME to perform the action on
+Where the MEs start at 0. So ME 1 is 0
+
+```
+//This will perform a cut on ME 0
+var msg = {
+    "payload": {
+        "cmd": "performAuto",
+        "data": {
+            "ME": 0
+        }
+    }
+}
+```
 
 ## Macro Action
 Performs a maro
