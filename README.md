@@ -30,7 +30,7 @@ Thanks to SKAARHOJ for the research into the commands! This is also where you ca
 [SKAARHOJ BMD Protocol](https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html)
 
 ## How to Use
-[How to use](https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html)
+[How to use](https://github.com/haydendonald/blackmagic-atem-nodered/blob/master/howToUse.md)
 
 ## Special Thanks
 - Thanks to [SKAARHOJ](https://www.skaarhoj.com/) for the research and listing of the commands to control the ATEM
