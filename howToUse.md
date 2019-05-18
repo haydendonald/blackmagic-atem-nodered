@@ -248,6 +248,28 @@ var msg = {
 }
 ```
 
+## Transition Position (Get/Set)
+The time read from the ATEM
+### cmd = "transitionPosition"
+### ME = The ME the transition is current on
+### inTransition = If the transition is transitioning
+### framesRemaining = The frames remaining in the transition
+### position = The current position of the transition
+0 - 9999
+
+```
+//This will set the transition position on ME 0 to be half way
+var msg = {
+    "payload": {
+        "cmd": "transitionPosition",
+        "data": {
+            "ME": 0,
+            "position": 4999
+        }
+    }
+}
+```
+
 ## Macro Action (Set)
 Performs a maro
 ### cmd = "macroAction"
