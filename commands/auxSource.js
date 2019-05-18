@@ -11,7 +11,7 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    this.data["auxSource" + data[0]] = {
+    this.data[data[0]] = {
       "inputSource": commandList.list.inputProperty.findInput(data.readUInt16BE(2))
     }
     command.payload.data = this.data;
@@ -35,7 +35,7 @@ module.exports = {
     //If the data is null return the value
     if(command.payload.data == undefined || command.payload.data == null) {error="The data parameter was null";}
     else {
-      if(command.payload.data.auxSource == undefined || command.payload.data.auxSource == null) {
+      if(command.payload.data.id == undefined || command.payload.data.id == null) {
         msg.direction = "node";
         msg.command.payload.data = this.data;
       }
@@ -58,19 +58,22 @@ module.exports = {
           //Set the input source
           var packet = Buffer.alloc(4).fill(0);
           packet[0] = command.payload.data.mask ? 1 : 0;
-          packet[1] = command.payload.data.auxSource;
+          packet[1] = command.payload.data.id;
           packet.writeInt16BE(videoSource.id, 2);
           msg.direction = "server";
           msg.command.packet = packet;
-          console.log(videoSource);
-          console.log(packet);
         }
         else {error="A mask parameter is required";}
       }
       else {
         //Return the current input source
         msg.direction = "node";
-        msg.command.payload.data = this.data["auxSource" + command.payload.data.auxSource];
+        if(command.payload.data.id === undefined || command.payload.data.id === null) {
+          msg.command.payload.data = this.data;
+        }
+        else {
+          msg.command.payload.data = this.data[command.payload.data.id];
+        }
       }
     }
 
