@@ -48,7 +48,7 @@ module.exports = function(RED)
         //Process incoming message object (this does no validation so this needs to be done before calling this fn)
         this.send = function(msg, sender) {
             if(node.information.status !== "connected") {
-                node.sendStatus("red", "Not Connected!", "");
+                node.sendStatus("red", "Not Connected!");
             }
             else {
                 var cmd = commands.findCommand(msg.payload.cmd);
@@ -226,13 +226,28 @@ module.exports = function(RED)
                     break;
                 }
                 case "error": {
-                    node.sendStatus("green", "ATEM Error");
+                    node.sendStatus("orange", "ATEM Error");
+                    var command = {
+                        "payload": {
+                            "type": "status",
+                            "connectionStatus": "error",
+                            "errorInformation": information
+                        }
+                    }
+                    messageCallback(command);
                     break;
                 }
                 case "connecting": {
                     node.sendStatus("orange", "Connecting...");
                     node.log("Connecting to ATEM @ " + ipAddress);
                     node.information.status = "connecting";
+                    var command = {
+                        "payload": {
+                            "type": "status",
+                            "connectionStatus": "connecting"
+                        }
+                    }
+                    messageCallback(command);
         
                     break;
                 }
