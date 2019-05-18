@@ -30,7 +30,7 @@ var msg.payload = {
 [{"id":"78488d8.fa1d574","type":"function","z":"4ecf69fc.958c48","name":"Change Program Input On ME 0 To Input 1","func":"var msg1 = {\n    \"payload\": {\n        \"cmd\": \"programInput\",\n        \"data\": {\n            \"ME\": 0,\n            \"videoSource\": {\n                \"id\": 0\n            }\n        }\n    }\n}\nreturn msg1;","outputs":1,"noerr":0,"x":611,"y":180,"wires":[["6e96c850.4b84c8"]]},{"id":"6e96c850.4b84c8","type":"atem-atem","z":"4ecf69fc.958c48","name":"ATEM","network":"3260f992.1b9866","outputMode":"all","x":858,"y":179,"wires":[["a9196221.5360f"]]},{"id":"2b3e1a40.2130e6","type":"inject","z":"4ecf69fc.958c48","name":"","topic":"","payload":"","payloadType":"date","repeat":"","crontab":"","once":false,"x":348,"y":180,"wires":[["78488d8.fa1d574"]]},{"id":"a9196221.5360f","type":"debug","z":"4ecf69fc.958c48","name":"","active":true,"console":"false","complete":"false","x":1019,"y":179,"wires":[]},{"id":"b9195ab8.f950f8","type":"comment","z":"4ecf69fc.958c48","name":"Remember to change the ip address","info":"Open ATEM and edit the network and set \nthe ip address of the atem.\n\nThe IP Address can be found in the ATEM setup utility","x":862.5,"y":129,"wires":[]},{"id":"3260f992.1b9866","type":"atem-network","z":"","name":"Test ATEM","ipAddress":"0.0.0.0"}]
 ```
 
-## Raw Command
+## Raw Command (Get/Set)
 Performs a raw command to the ATEM. The commands can be found at https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html.
 ### cmd = "raw"
 ### name = The name of the command to be passed
@@ -49,7 +49,7 @@ var msg = {
 }
 ```
 
-## Program Input
+## Program Input (Get/Set)
 Changes the program input on a ME
 ### cmd = "programInput"
 ### ME = The ME to perform the action on
@@ -75,7 +75,7 @@ var msg = {
 }
 ```
 
-## Preview Input
+## Preview Input (Get/Set)
 Changes the preview input on a ME
 ### cmd = "previewInput"
 ### ME = The ME to perform the action on
@@ -101,7 +101,7 @@ var msg = {
 }
 ```
 
-## Input Property
+## Input Property (Get/Set)
 Gets the properties of a input
 ### cmd = "inputProperty"
 ### id = The id of the input
@@ -139,7 +139,7 @@ var msg = {
 }
 ```
 
-## Perform Cut
+## Perform Cut (Set)
 Performs a cut transition on a ME
 ### cmd = "performCut"
 ### ME = The ME to perform the action on
@@ -157,7 +157,7 @@ var msg = {
 }
 ```
 
-## Perform Auto
+## Perform Auto (Set)
 Performs a auto transition on a ME
 ### cmd = "performAuto"
 ### ME = The ME to perform the action on
@@ -175,7 +175,7 @@ var msg = {
 }
 ```
 
-## Downstream Keyer
+## Downstream Keyer (Get/Set)
 Controls the downstream keyers
 ### cmd = "downstreamKeyer"
 ### keyer[x] = The keyer
@@ -202,7 +202,7 @@ var msg = {
 }
 ```
 
-## Upstream Keyer
+## Upstream Keyer (Get/Set)
 Controls the upstream keyers
 ### cmd = "upstreamKeyer"
 ### keyer[x] = The keyer
@@ -230,7 +230,25 @@ var msg = {
 }
 ```
 
-## Macro Action
+## Time (Get)
+The time read from the ATEM
+### cmd = "time"
+### hour = The hour
+### minute = The minute
+### second = The second
+### frame = The current frame number
+
+```
+//This will get the current time on the ATEM
+var msg = {
+    "payload": {
+        "cmd": "time",
+        "data": {}
+    }
+}
+```
+
+## Macro Action (Set)
 Performs a maro
 ### cmd = "macroAction"
 ### macroId = the macro id
