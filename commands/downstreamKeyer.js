@@ -18,7 +18,7 @@ module.exports = {
       this.data["keyer" + data[0]].fillSource = undefined;
       this.data["keyer" + data[0]].keySource = undefined;
     }
-    this.data["keyer" + data[0]].onAir = data[1] == 0x01;
+    this.data["keyer" + data[0]].state = data[1] == 0x01;
     this.data["keyer" + data[0]].inTransition = data[2] == 0x01;
     this.data["keyer" + data[0]].isAutoTransitioning = data[3] == 0x01;
     this.data["keyer" + data[0]].framesRemaining = data[4];
@@ -46,18 +46,18 @@ module.exports = {
     //If the data is null return the value
     if(command.payload.data == undefined || command.payload.data == null) {error="The data parameter was null";}
     else {
-      if(command.payload.data.keyerId == undefined || command.payload.data.keyerId == null) {
+      if(command.payload.data.id == undefined || command.payload.data.id == null) {
         msg.direction = "node";
         msg.command.payload.data = this.data;
       }
-      else if(command.payload.data.keyerState == undefined || command.payload.data.keyerState == null) {
+      else if(command.payload.data.state == undefined || command.payload.data.state == null) {
         msg.direction = "node";
-        msg.command.payload.data = this.data["keyer" + command.payload.data.keyerId];
+        msg.command.payload.data = this.data["keyer" + command.payload.data.id];
       }
       else {
         var packet = Buffer.alloc(4).fill(0);
-        packet[0] = command.payload.data.keyerId;
-        packet[1] = command.payload.data.keyerState ? 1 : 0;
+        packet[0] = command.payload.data.id;
+        packet[1] = command.payload.data.state ? 1 : 0;
         msg.direction = "server";
         msg.command.packet = packet;
       }
@@ -82,8 +82,8 @@ module.exports = {
     if(keyer != undefined && keyer != null) {
       keyer.fillSource = fillSource;
       keyer.keySource = keySource;
-      commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyFill", this.data["keyer" + keyerId].fillSource, keyer.onAir, false);
-      commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyKey", this.data["keyer" + keyerId].keySource, keyer.onAir, false);
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyFill", this.data["keyer" + keyerId].fillSource, keyer.state, false);
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyKey", this.data["keyer" + keyerId].keySource, keyer.state, false);
     }
   }
 }
