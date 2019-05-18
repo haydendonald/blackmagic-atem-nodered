@@ -18,8 +18,23 @@ module.exports = {
   },
   processData(data, flag, command, commandList) {
     command.payload.data.id = data.readUInt16BE(0);
-    command.payload.data.longName = data.toString("UTF8", 2, 21);
-    command.payload.data.shortName = data.toString("UTF8", 22, 26);
+
+    //Find the end of the longName
+    for(var i = 0; i < 20; i++) {
+      if(data.toString("UTF8", 2, 2 + i).match(/^[a-zA-Z0-9_ ]*$/) == null || i == 19) {
+        command.payload.data.longName = data.toString("UTF8", 2, 2 + i);
+        break;
+      }
+    }
+
+    //Find the end of the shortName
+    for(var i = 0; i < 5; i++) {
+      if(data.toString("UTF8", 22, 22 + i).match(/^[a-zA-Z0-9_ ]*$/) == null || i == 4) {
+        command.payload.data.shortName = data.toString("UTF8", 22, 22 + i);
+        break;
+      }
+    }
+
     command.payload.data.avalibleExternalPortTypes = {
       "SDI": data[27].toString(2)[0] == "1",
       "HDMI": data[27].toString(2)[1] == "1",
