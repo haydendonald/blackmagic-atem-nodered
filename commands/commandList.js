@@ -48,7 +48,8 @@ module.exports = {
       macroAction: require("./macroAction.js"),
       downstreamKeyerConfig: require("./downstreamKeyerConfig.js"),
       upstreamKeyerConfig: require("./upstreamKeyerConfig.js"),
-      warning: require("./warning.js")
+      warning: require("./warning.js"),
+      topology: require("./topology.js")
   },
   findFlag(id) {
     for(var key in this.flags) {
