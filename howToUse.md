@@ -346,3 +346,41 @@ var msg = {
     }
 }
 ```
+
+## Warning (Get)
+If the atem sends a warning
+### cmd = "warning"
+### warningMessage = The warning message
+
+```
+//This will get the last warning message received if there was one
+var msg = {
+    "payload": {
+        "cmd": "warning",
+        "data": {}
+    }
+}
+```
+
+## Topology (Get)
+The topology of the ATEM
+### cmd = "topology"
+### MEs = The amount of MEs
+### sources = The amount of sources
+### colorGenerators = The amount of color generators
+### AUXBusses = The amount of aux busses
+### downstreamKeyers = The amount of downstream keyers
+### stingers = The amount of stingers
+### DVEs = The amount of DVEs
+### superSources = The amount of super sources
+### hasSDOutput = As a SD output
+
+```
+//This will get the last warning message received if there was one
+var msg = {
+    "payload": {
+        "cmd": "topology",
+        "data": {}
+    }
+}
+```
