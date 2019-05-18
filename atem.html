@@ -24,7 +24,7 @@
 <script type="text/javascript">
     RED.nodes.registerType('atem-atem', {
         category: 'BlackMagic',
-        color: '#fffbef',
+        color: '#6B6B6B',
         defaults: {
             name: {value: ""},
             network: {value: "", required: true, type: "atem-network"},
@@ -32,9 +32,9 @@
         },
         inputs: 1,
         outputs: 1,
-        icon: "kramer.png",
         align: "right",
         paletteLabel: "ATEM",
+        icon: "blackmagiclogo.png",
         label: function() {
             return this.name||"ATEM";
         }
@@ -43,4 +43,7 @@
 
 <!-- Information Panel -->
 <script type="text/x-red" data-help-name="atem-atem">
+    <h1>Blackmagic ATEM</h1>
+    <a href = "https://github.com/haydendonald/blackmagic-atem-nodered"><p>Github</p></a>
+    <a href="https://github.com/haydendonald/blackmagic-atem-nodered/blob/master/howToUse.md"><h1>How To Use!</h1></a>
 </script>
