@@ -249,7 +249,7 @@ var msg = {
 ```
 
 ## Transition Position (Get/Set)
-The time read from the ATEM
+The current transition position
 ### cmd = "transitionPosition"
 ### ME = The ME the transition is current on
 ### inTransition = If the transition is transitioning
@@ -266,6 +266,20 @@ var msg = {
             "ME": 0,
             "position": 4999
         }
+    }
+}
+```
+
+## Version (Get)
+The current version of the ATEM
+### cmd = "version"
+
+```
+//This will get the current version of the ATEM
+var msg = {
+    "payload": {
+        "cmd": "version",
+        "data": {}
     }
 }
 ```
