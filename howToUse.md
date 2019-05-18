@@ -175,6 +175,61 @@ var msg = {
 }
 ```
 
+## Downstream Keyer
+Controls the downstream keyers
+### cmd = "downstreamKeyer"
+### keyer[x] = The keyer
+Where x is the keyer number 0 - 4
+### id = The keyer id
+### state = The keyer state
+### keyer[x].fillSource = The fill source of this keyer
+### keyer[x].keySource = The key source of this keyer
+### keyer[x].state = The keyer state
+### keyer[x].inTransition = If this keyer is in transition
+### keyer[x].isAutoTransitioning = If this keyer is in a auto transition
+### keyer[x].framesRemaining = The amount of frames remaining for the transition
+
+```
+//This will turn downstream keyer 0 on air
+var msg = {
+    "payload": {
+        "cmd": "downstreamKeyer",
+        "data": {
+            "id": 0,
+            "state: true
+        }
+    }
+}
+```
+
+## Upstream Keyer
+Controls the upstream keyers
+### cmd = "upstreamKeyer"
+### keyer[x] = The keyer
+Where x is the keyer number 0 - 4
+### keyerId = The keyer id
+### keyerState = The keyer state
+### keyer[x].fillSource = The fill source of this keyer
+### keyer[x].keySource = The key source of this keyer
+### keyer[x].onAir = If this keyer is onAir
+### keyer[x].inTransition = If this keyer is in transition
+### keyer[x].isAutoTransitioning = If this keyer is in a auto transition
+### keyer[x].framesRemaining = The amount of frames remaining for the transition
+
+```
+//This will turn upstream keyer 0 on ME 0 on air
+var msg = {
+    "payload": {
+        "cmd": "downstreamKeyer",
+        "data": {
+            "ME": 0,
+            "id": 0,
+            "state: true
+        }
+    }
+}
+```
+
 ## Macro Action
 Performs a maro
 ### cmd = "macroAction"
