@@ -14,8 +14,7 @@ module.exports = {
     command.payload.data.isRunning = data[0].toString(2)[0] == "1";
     command.payload.data.isWaiting = data[0].toString(2)[1] == "1";
     command.payload.data.isLooping = data[1].toString(2)[0] == "1";
-    
-    if(flag != commandList.flags.sync){return false;}
+    this.data = command.payload.data[marcoId];
     return true;
   },
   sendData(command, commandList) {
@@ -65,5 +64,9 @@ module.exports = {
       }
     }
     return msg;
+  },
+  //What todo once we are connected
+  afterInit() {
+    return false;
   }
 }

@@ -280,5 +280,12 @@ module.exports = {
         this.data.inputs[key].position = position;
       }
     }
+  },
+  //What todo once we are connected
+  afterInit() {
+    return {
+      "command": this.cmd,
+      "data": this.data
+    }
   }
 }

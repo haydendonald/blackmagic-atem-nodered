@@ -15,8 +15,6 @@ module.exports = {
     //Put this data in the upstream keyer (Each keyerid is the meid + 1 * the keyer id + 1)
     commandList.list.upstreamKeyer.addKeyerInformation(((data[0] * 10) + (data[1])), commandList.list.inputProperty.findInput(data.readUInt16BE(6)), 
       commandList.list.inputProperty.findInput(data.readUInt16BE(8)), commandList);
-
-    if(flag != commandList.flags.initializing){return false;}
     return true;
   },
   sendData(command, commandList) {
@@ -30,5 +28,9 @@ module.exports = {
       }
     }
     return msg;
+  },
+  //What todo once we are connected
+  afterInit() {
+    return false;
   }
 }

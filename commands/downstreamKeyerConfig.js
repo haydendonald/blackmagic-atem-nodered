@@ -15,8 +15,6 @@ module.exports = {
     //Put this data in the downstream keyer
     commandList.list.downstreamKeyer.addKeyerInformation(data[0], commandList.list.inputProperty.findInput(data.readUInt16BE(2)), 
       commandList.list.inputProperty.findInput(data.readUInt16BE(4)), commandList);
-
-    if(flag != commandList.flags.initializing){return false;}
     return true;
   },
   sendData(command, commandList) {
@@ -30,5 +28,9 @@ module.exports = {
       }
     }
     return msg;
+  },
+  //What todo once we are connected
+  afterInit() {
+    return false;
   }
 }

@@ -213,12 +213,27 @@ module.exports = function(RED)
                     node.sendStatus("green", "Connected!");
                     node.log("Connected to ATEM @ " + ipAddress);
                     var command = {
+                        "topic": "status",
                         "payload": {
                             "type": "status",
                             "connectionStatus": "connected"
                         }
                     }
                     messageCallback(command);
+
+                    //Send out the inital values
+                    var cmds = [];
+                    for(var key in commands.list) {
+                        var cmd = {
+                            "topic": "initial",
+                            "payload": commands.list[key].afterInit()
+                        }
+                        if(cmd.payload != false) {
+                            cmds.push(cmd);
+                        }
+                    }
+
+                    messageCallback(cmds);
                     break;
                 }
                 case "got-data": {
@@ -228,6 +243,7 @@ module.exports = function(RED)
                 case "error": {
                     node.sendStatus("orange", "ATEM Error");
                     var command = {
+                        "topic": "status",
                         "payload": {
                             "type": "status",
                             "connectionStatus": "error",
@@ -242,6 +258,7 @@ module.exports = function(RED)
                     node.log("Connecting to ATEM @ " + ipAddress);
                     node.information.status = "connecting";
                     var command = {
+                        "topic": "status",
                         "payload": {
                             "type": "status",
                             "connectionStatus": "connecting"
@@ -259,6 +276,7 @@ module.exports = function(RED)
                     node.information.connectionTimeout = 0;
                     commands.close();
                     var command = {
+                        "topic": "status",
                         "payload": {
                             "type": "status",
                             "connectionStatus": "disconnected"
@@ -319,7 +337,7 @@ module.exports = function(RED)
                         sessionId = messageSessionId;
                     }
                     else {
-                        node.error("Unknown connection state");
+                        node.error("Unknown connection state: " + flag);
                     }
 
                     return;
@@ -358,6 +376,7 @@ module.exports = function(RED)
                     //Process the commands
                     for(var i = 0; i < cmds.length; i++) {
                         var command = {
+                            "topic": "command",
                             "payload": {
                                 "type": undefined,
                                 "raw": {

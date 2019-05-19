@@ -17,7 +17,6 @@ module.exports = {
     command.payload.data.frame = data[3];
 
     this.data = command.payload.data;
-    if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {
@@ -32,5 +31,9 @@ module.exports = {
     }
     
     return msg;
+  },
+  //What todo once we are connected
+  afterInit() {
+    return false;
   }
 }

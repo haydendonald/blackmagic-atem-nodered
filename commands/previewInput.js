@@ -105,5 +105,12 @@ module.exports = {
     this.data[ME].inTransition = inTransition;
     this.data[ME].framesRemaining = framesRemaining;
     this.data[ME].position = position;
+  },
+  //What todo once we are connected
+  afterInit() {
+    return {
+      "command": this.cmd,
+      "data": this.data
+    }
   }
 }

@@ -28,5 +28,12 @@ module.exports = {
     }
     
     return msg;
+  },
+  //What todo once we are connected
+  afterInit() {
+    return {
+      "command": this.cmd,
+      "data": this.data
+    }
   }
 }

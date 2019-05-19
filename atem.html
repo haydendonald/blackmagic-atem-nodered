@@ -18,6 +18,22 @@
             <option value="all">Output everything</option>
         </select>
     </div>
+    <div class="form-row">
+        <label for="node-input-sendInitialData"><i class="icon-tag"></i> Send Initial Data:</label>
+        <select id="node-input-sendInitialData">
+            <option value=""></option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select>
+    </div>
+    <div class="form-row">
+        <label for="node-input-sendStatusUpdates"><i class="icon-tag"></i> Send Status Updates:</label>
+        <select id="node-input-sendStatusUpdates">
+            <option value=""></option>
+            <option value="yes">Yes</option>
+            <option value="no">No</option>
+        </select>
+    </div>
 </script>
 
 <!-- Register -->
@@ -28,7 +44,9 @@
         defaults: {
             name: {value: ""},
             network: {value: "", required: true, type: "atem-network"},
-            outputMode: {value: "status", required: true}
+            outputMode: {value: "status", required: true},
+            sendInitialData: {value: "yes", required: true},
+            sendStatusUpdates: {value: "yes", required: true}
         },
         inputs: 1,
         outputs: 1,

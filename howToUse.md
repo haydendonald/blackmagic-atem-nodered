@@ -49,6 +49,23 @@ var msg = {
 }
 ```
 
+## Status (Automatic)
+States the current state of the node
+### msg.topic = "status"
+### msg.payload.connectionStatus = The current connection state
+### msg.payload.errorInformation = The error information
+disconnected - Disconnected
+connecting - Attempting to handshake
+initalising - Gathering information
+connected - Connected
+error - A error has occured
+
+## Inital (Automatic)
+When all information is gained from the ATEM spit out the read values
+### msg.topic = "initial"
+### msg.payload.cmd = The command
+### msg.payload.data = The commands data (Look at the command in this doc)
+
 ## Program Input (Get/Set)
 Changes the program input on a ME
 ### cmd = "programInput"
