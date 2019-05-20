@@ -10,12 +10,12 @@ module.exports = {
   },
   processData(data, flag, command, commandList) {
     command.payload.cmd = this.cmd;
-    command.payload.data.macroId = data.readUInt16BE(2);
-    command.payload.data.isRunning = data[0].toString(2)[0] == "1";
-    command.payload.data.isWaiting = data[0].toString(2)[1] == "1";
-    command.payload.data.isLooping = data[1].toString(2)[0] == "1";
-    this.data = command.payload.data[command.payload.data.marcoId];
-    return true;
+    // command.payload.data.macroId = data.readUInt16BE(2);
+    // command.payload.data.isRunning = data[0].toString(2)[0] == "1";
+    // command.payload.data.isWaiting = data[0].toString(2)[1] == "1";
+    // command.payload.data.isLooping = data[1].toString(2)[0] == "1";
+    // this.data = command.payload.data[command.payload.marcoId];
+    return false;
   },
   sendData(command, commandList) {
     var error = null;
