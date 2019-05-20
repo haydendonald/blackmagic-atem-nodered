@@ -1,4 +1,3 @@
-//BUG:: Long name and shortname need to find their end as there is garbage at the end of it
 module.exports = {
   get: "InPr",
   cmd: "inputProperty",
@@ -17,6 +16,7 @@ module.exports = {
     messageCallbacks = msgCallbacks;
   },
   processData(data, flag, command, commandList) {
+    command.payload.cmd = this.cmd;
     command.payload.data.id = data.readUInt16BE(0);
 
     //Find the end of the longName
@@ -189,6 +189,7 @@ module.exports = {
         if(sendTallyUpdates) {
           for(var i in messageCallbacks) {
             var msg = {
+              "topic": "command",
               "payload": {
                 "cmd": this.cmd,
                 "data": this.data
@@ -225,6 +226,7 @@ module.exports = {
       if(sendTallyUpdates && wasLive) {
         for(var i in messageCallbacks) {
             var msg = {
+              "topic": "command",
               "payload": {
                 "cmd": this.cmd,
                 "data": this.data
@@ -252,6 +254,7 @@ module.exports = {
         if(sendTallyUpdates) {   
           for(var i in messageCallbacks) {
             var msg = {
+              "topic": "command",
               "payload": {
                 "cmd": this.cmd,
                 "data": this.data

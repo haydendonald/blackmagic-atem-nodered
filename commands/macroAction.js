@@ -14,7 +14,7 @@ module.exports = {
     command.payload.data.isRunning = data[0].toString(2)[0] == "1";
     command.payload.data.isWaiting = data[0].toString(2)[1] == "1";
     command.payload.data.isLooping = data[1].toString(2)[0] == "1";
-    this.data = command.payload.data[marcoId];
+    this.data = command.payload.data[command.payload.data.marcoId];
     return true;
   },
   sendData(command, commandList) {

@@ -63,6 +63,7 @@ module.exports = function(RED)
                         }
                         catch(error){}
                         sendBuffer.push(generatePacket(msg.payload.data.packet, sender));
+                        console.log("PUSH BUFF");
                     }
                     else {
                         node.sendStatus("red", "Unknown Command", "Unknown command: " + msg.payload.cmd);
@@ -80,6 +81,7 @@ module.exports = function(RED)
                                         node.sendStatus("red", "Internal Error", success.command.payload.data);
                                     }
                                     else {
+                                        success.command.topic = "command";
                                         messageCallback(success.command);
                                     }
                                 }
@@ -148,6 +150,7 @@ module.exports = function(RED)
                         localPacketId++;
                         sendBuffer[0].attempts++;
                         sendBuffer[0].timeout = 5;
+                        console.log("SEND");
                     }
                     else {
                         sendBuffer[0].sender.sendStatus("red", "Failed", "Message failed to send: Not connected");
@@ -157,9 +160,11 @@ module.exports = function(RED)
                 else if(sendBuffer[0].timeout <= 0) {
                     sendBuffer[0].sender.sendStatus("red", "Failed", "Message failed to send: Timeout");
                     sendBuffer = [];
+                    console.log("TIMEOUT");
                     statusCallback("disconnected", "timeout");
                 }
                 else {
+                    console.log("WAIT");
                     sendBuffer[0].timeout -= 1;
                 }
             }
@@ -347,7 +352,7 @@ module.exports = function(RED)
                 else {
                     //Our message
                     //Check if a packet was processed
-                    sendBuffer.splice(0, 1);
+                    sendBuffer.splice(0, 1);// should be checking the message type. This may remove messages 
 
                     //Reply to each command
                     var buffer = new Buffer.alloc(12).fill(0);
