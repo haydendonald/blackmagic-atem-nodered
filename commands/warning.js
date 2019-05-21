@@ -1,5 +1,6 @@
 module.exports = {
   get: "Warn",
+  set: "",
   cmd: "warning",
   data: {},
   close() {

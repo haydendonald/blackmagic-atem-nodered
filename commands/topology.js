@@ -1,5 +1,6 @@
 module.exports = {
   get: "_top",
+  set: "",
   cmd: "topology",
   data: {},
   close() {

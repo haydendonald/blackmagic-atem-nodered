@@ -1,5 +1,6 @@
 module.exports = {
   get: "_ver",
+  set: "",
   cmd: "version",
   data: {},
   close() {

@@ -1,5 +1,6 @@
 module.exports = {
   get: "InPr",
+  set: "",
   cmd: "inputProperty",
   data: {
     "inputs": {}

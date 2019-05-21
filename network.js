@@ -8,6 +8,7 @@ module.exports = function(RED)
     function ATEMNetwork(config)
     {
         RED.nodes.createNode(this, config);
+        var inProcessingIncoming = false;
         var node = this;
         var name = config.name;
         var ipAddress = config.ipAddress;
@@ -63,7 +64,6 @@ module.exports = function(RED)
                         }
                         catch(error){}
                         sendBuffer.push(generatePacket(msg.payload.data.packet, sender));
-                        console.log("PUSH BUFF");
                     }
                     else {
                         node.sendStatus("red", "Unknown Command", "Unknown command: " + msg.payload.cmd);
@@ -91,9 +91,20 @@ module.exports = function(RED)
                             //The data needs to be requested from the server
                             case "server": {
                                 //Generate the packet
+                                var sendIt = true;
                                 var nameBuffer = new Buffer.from(success.name);
-                                sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]), sender));
-                                node.sendStatus("yellow", "Sending...", "");
+
+                                //Check if the command already exists in the buffer, if so don't add another one!
+                                for(var k in sendBuffer) {
+                                    if(sendBuffer[k].commandPacket.compare(Buffer.concat([nameBuffer, success.command.packet])) == 0) {
+                                        sendIt = false;
+                                    }
+                                }
+
+                                if(sendIt == true) {
+                                    sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]), sender)); 
+                                }
+
                                 break;
                             }
                             default: {
@@ -114,11 +125,13 @@ module.exports = function(RED)
         function generatePacket(commandPacket, sender) {
             var message = {
                 "packet": null,
-                "packetId": [parseInt(localPacketId/256), parseInt(localPacketId%256)],
+                "packetId": localPacketId,
+                "commandPacket": commandPacket,
                 "sender": sender,
                 "attempts": 1,
                 "timeout": 0
             }
+            //localPacketId++;
 
             var packet = new Buffer.alloc(16).fill(0);
             packet[0] = parseInt((16+commandPacket.length)/256 | 0x88);
@@ -126,8 +139,8 @@ module.exports = function(RED)
             packet[2] = sessionId[0];
             packet[3] = sessionId[1];
             packet.writeInt16BE(message.packetId, 10);
-            packet[10] = message.packetId[0];
-            packet[11] = message.packetId[1];
+            packet[10] = parseInt(message.packetId/256);
+            packet[11] = parseInt(message.packetId%256);
             packet[12] = parseInt((4+commandPacket.length)/256);
             packet[13] = parseInt((4+commandPacket.length)%256);
             message.packet = new Buffer.concat([packet, commandPacket]);
@@ -136,37 +149,26 @@ module.exports = function(RED)
 
         //Send out all commands in the send buffer
         function processSendBuffer() {
-            if(sendBuffer.length > 0) {
-                if(sendBuffer[0].timeout <= 0 && sendBuffer[0].attempts < 2) {
-                    //Send the packet
-                    if(server && node.information.status == "connected") {
-                        //Update the packet id
-                        sendBuffer[0].packetId = [parseInt(localPacketId/256), parseInt(localPacketId%256)];
-                        sendBuffer[0].packet[10] = sendBuffer[0].packetId[0];
-                        sendBuffer[0].packet[11] = sendBuffer[0].packetId[1];
-                        
-                        try{server.send(sendBuffer[0].packet, port, ipAddress);}
-                        catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
-                        localPacketId++;
-                        sendBuffer[0].attempts++;
-                        sendBuffer[0].timeout = 5;
-                        console.log("SEND");
+            if(sendBuffer.length > 0 && inProcessingIncoming == false) {
+                if(sendBuffer[0].timeout <= 0) {
+                    if(sendBuffer[0].attempts == 2) {
+                        //Failed
+                        sendBuffer.splice(0, 1);
                     }
                     else {
-                        sendBuffer[0].sender.sendStatus("red", "Failed", "Message failed to send: Not connected");
-                        sendBuffer.slice(0, 1);
+                        var success = true;
+                        localPacketId++;
+                        try{server.send(sendBuffer[0].packet, port, ipAddress);}
+                        catch(e){node.error("Attempted to send a message but the server was closed: " + e); success = false;}
+    
+                        if(success) {
+                            //Sent
+                            sendBuffer[0].attempts = 2;
+                            sendBuffer[0].timeout = 5;
+                        }
                     }
                 }
-                else if(sendBuffer[0].timeout <= 0) {
-                    sendBuffer[0].sender.sendStatus("red", "Failed", "Message failed to send: Timeout");
-                    sendBuffer = [];
-                    console.log("TIMEOUT");
-                    statusCallback("disconnected", "timeout");
-                }
-                else {
-                    console.log("WAIT");
-                    sendBuffer[0].timeout -= 1;
-                }
+                else {sendBuffer[0].timeout -= 1;}
             }
         }
 
@@ -327,6 +329,7 @@ module.exports = function(RED)
         function processIncomingMessage(message, rinfo) {
             var length = ((message[0] & 0x07) << 8) | message[1];
             if(length == rinfo.size) {
+                inProcessingIncoming = true;
                 var flag = message[0] >> 3;
                 messageSessionId = [message[2], message[3]];
                 var remotePacketId = [message[10], message[11]];
@@ -352,7 +355,7 @@ module.exports = function(RED)
                 else {
                     //Our message
                     //Check if a packet was processed
-                    sendBuffer.splice(0, 1);// should be checking the message type. This may remove messages 
+                    //sendBuffer.splice(0, 1);// should be checking the message type. This may remove messages 
 
                     //Reply to each command
                     var buffer = new Buffer.alloc(12).fill(0);
@@ -391,12 +394,20 @@ module.exports = function(RED)
                             }
                         }
 
+
                         var length = cmds[i].readUInt16BE(0);
                         var name =  cmds[i].toString("UTF8", 4, 8);
                         command.payload.raw.length = length;
                         command.payload.raw.name = name;
                         command.payload.raw.packet = cmds[i];
 
+                        // //Answerback flag check for the command that this is a answerback for
+                        if(sendBuffer.length > 0) {
+                            if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4))) {
+                                //Respose
+                                sendBuffer.splice(0, 1);
+                            }
+                        }
 
                         //Check for inital conditions and load in the information otherwise sync
                         //Flag 1 >> 5 >> 1 (Done)
@@ -435,6 +446,8 @@ module.exports = function(RED)
 
                     node.information.connectionTimeout = 0;
                 }
+
+                setTimeout(function(){inProcessingIncoming = false;}, 200);
             }
         }
     }

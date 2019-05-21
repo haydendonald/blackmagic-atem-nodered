@@ -51,6 +51,17 @@ module.exports = {
       warning: require("./warning.js"),
       topology: require("./topology.js")
   },
+  //Return the get for set and set for get command name
+  findInvertedDirectionName(name) {
+    for(var key in this.list) {
+      if(this.list[key].get.toUpperCase() == name.toUpperCase()) {
+        return this.list[key].set;
+      }
+      if(this.list[key].set.toUpperCase() == name.toUpperCase()) {
+        return this.list[key].get;
+      }
+    }
+  },
   findFlag(id) {
     for(var key in this.flags) {
         if(this.flags[key] == parseInt(id)) {

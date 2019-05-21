@@ -1,5 +1,6 @@
 module.exports = {
   get: "Time",
+  set: "",
   cmd: "time",
   data: {},
   close() {
