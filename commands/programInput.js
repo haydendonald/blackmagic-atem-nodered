@@ -81,6 +81,21 @@ module.exports = {
               packet.writeInt16BE(videoSource.id, 2);
               msg.direction = "server";
               msg.command.packet = packet;
+
+              //Check if the input is currently on this ME, if it is don't resend it
+              if(this.data[command.payload.data.ME].videoSource.id == videoSource.id) {
+                  var msg = {
+                    "direction": "node",
+                    "command": {
+                      "payload": {
+                        "cmd": this.cmd,
+                        "data": this.data
+                      }
+                    }
+                  }
+                  
+                  return msg;
+              }
             }
           }
         }

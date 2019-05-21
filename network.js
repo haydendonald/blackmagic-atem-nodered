@@ -16,6 +16,7 @@ module.exports = function(RED)
         var server = null;
         var pingCheck = null;
         var sessionId = undefined;
+        var timeoutCount = 0;
         var localPacketId = 1;
         node.information = {
             "name": name,
@@ -29,7 +30,7 @@ module.exports = function(RED)
         var statusCallbacks = [];
         var sendBuffer = [];
 
-        var sendInterval = setInterval(function() {processSendBuffer();}, 100);
+        var sendInterval = setInterval(function() {processSendBuffer();}, 10);
 
         //Pings the server, returns true if connected
         function checkConnection(func) {
@@ -131,7 +132,6 @@ module.exports = function(RED)
                 "attempts": 1,
                 "timeout": 0
             }
-            //localPacketId++;
 
             var packet = new Buffer.alloc(16).fill(0);
             packet[0] = parseInt((16+commandPacket.length)/256 | 0x88);
@@ -155,6 +155,11 @@ module.exports = function(RED)
                         //Failed
                         sendBuffer.splice(0, 1);
                         node.sendStatus("red", "Failed to Send: Timeout");
+                        timeoutCount++;
+                        if(timeoutCount > 5) {
+                            //We have had several timeout issues we must be disconnected
+                            statusCallback("disconnected", "timeout");
+                        }
                     }
                     else {
                         var success = true;
@@ -315,7 +320,7 @@ module.exports = function(RED)
             //Check for connection state
             pingCheck = setInterval(function() {
                 node.information.connectionTimeout++;
-                if(node.information.connectionTimeout > 5) {
+                if(node.information.connectionTimeout > 10) {
                     //Lost connection
                     statusCallback("disconnected", "timeout");
                     clearInterval(pingCheck);
@@ -410,6 +415,7 @@ module.exports = function(RED)
                                 //Respose
                                 sendBuffer.splice(0, 1);
                                 node.sendStatus("green", "Sent!");
+                                timeoutCount = 0;
                             }
                         }
 
