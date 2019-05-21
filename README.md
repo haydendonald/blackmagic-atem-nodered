@@ -6,9 +6,7 @@ Provides control and feedback from a Blackmagic ATEM device
 Please report any bugs that you may find. We will be using this in a automation system however won't be using all the functionality so tell me if you find any issues :) Below is some known issues.
 
 - Check if the output type works correctly [Minor]
-- When a transition position is being sent and a message is sent to the atem it causes a disconnect due to a reply not occuring [Major]
 - Unknown connection state (flag) 0x06 [Minor]. This may be a "atem full" error
-- When the same program/preview input is sent the atem rejects the connection [Major]
 
 ## Supported commands
 - Aux Source
