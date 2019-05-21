@@ -2,20 +2,46 @@ module.exports = {
   get: "MRPr",
   set: "MAct",
   cmd: "macroAction",
-  data: {},
+  macroCount: 100,
+  data: undefined,
   close() {
     this.data = {};
   },
   initializeData(data, flag, commandList) {
+    var command = {"payload":{"data":{}}};
+
+    //If there is no default data fill it assuming no macros are running
+    if(this.data === undefined){
+      this.data = {};
+      for(var i = 0; i < this.macroCount; i++){
+        this.data[i] = {};
+        this.data[i].macroId = i;
+        this.data[i].running = false;
+        this.data[i].waiting = false;
+        this.data[i].isLooping = false;
+        this.data[i].macroProperties = {};
+      }
+    }
+
+    this.processData(data, flag, command, commandList, false);
   },
   processData(data, flag, command, commandList) {
+    if(data.readUInt16BE(2) == 65535) {
+      for(var i in this.data) {
+        this.data[i].running = data[0].toString(2)[0] == "1";
+        this.data[i].waiting = data[0].toString(2)[1] == "1";
+        this.data[i].isLooping = data[1].toString(2)[0] == "1";
+      }
+    }
+    else {
+      this.data[data.readUInt16BE(2)].running = data[0].toString(2)[0] == "1";
+      this.data[data.readUInt16BE(2)].waiting = data[0].toString(2)[1] == "1";
+      this.data[data.readUInt16BE(2)].isLooping = data[1].toString(2)[0] == "1";
+    }
+
     command.payload.cmd = this.cmd;
-    // command.payload.data.macroId = data.readUInt16BE(2);
-    // command.payload.data.isRunning = data[0].toString(2)[0] == "1";
-    // command.payload.data.isWaiting = data[0].toString(2)[1] == "1";
-    // command.payload.data.isLooping = data[1].toString(2)[0] == "1";
-    // this.data = command.payload.data[command.payload.marcoId];
-    return false;
+    command.payload.data = this.data;
+    return true;
   },
   sendData(command, commandList) {
     var error = null;
@@ -66,7 +92,10 @@ module.exports = {
     return msg;
   },
   //What todo once we are connected
-  afterInit() {
-    return false;
+  afterInit() { 
+    return {
+      "cmd": this.cmd,
+      "data": this.data
+    }
   }
 }

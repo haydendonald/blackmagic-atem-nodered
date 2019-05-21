@@ -170,7 +170,7 @@ module.exports = function(RED)
                         if(success) {
                             //Sent
                             sendBuffer[0].attempts = 2;
-                            sendBuffer[0].timeout = 5;
+                            sendBuffer[0].timeout = 10;
                             node.sendStatus("yellow", "Sending...");
                         }
                     }

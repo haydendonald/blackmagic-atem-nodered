@@ -350,6 +350,13 @@ Integer of the macro id starting at 0
 - "insertwaitforuser" - Inserts a wait for the user
 - "continue" - Continue the marco after a pause
 - "deletemacro" - Deletes the macro
+### running = If the macro is currently running
+### wairing = If the macro is currently waiting
+### isLooping = If the macro is looping
+### macroProperties = The properties of the macro (see below)
+### macroProperties.isUsed = If the macro is used
+### macroProperties.name = The name of the macro
+### macroProperties.description = The description
 
 ```
 //This will run macro 0

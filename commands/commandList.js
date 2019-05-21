@@ -49,7 +49,8 @@ module.exports = {
       downstreamKeyerConfig: require("./downstreamKeyerConfig.js"),
       upstreamKeyerConfig: require("./upstreamKeyerConfig.js"),
       warning: require("./warning.js"),
-      topology: require("./topology.js")
+      topology: require("./topology.js"),
+      macroProperties: require("./macroProperties.js")
   },
   //Return the get for set and set for get command name
   findInvertedDirectionName(name) {
