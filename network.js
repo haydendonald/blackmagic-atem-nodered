@@ -411,7 +411,7 @@ module.exports = function(RED)
 
                         // //Answerback flag check for the command that this is a answerback for
                         if(sendBuffer.length > 0) {
-                            if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4))) {
+                            if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) ||  commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) == "") {
                                 //Respose
                                 sendBuffer.splice(0, 1);
                                 node.sendStatus("green", "Sent!");

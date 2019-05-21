@@ -54,8 +54,8 @@ module.exports = {
         msg.command.payload.data = this.data;
       }
       //Else if the keyer is empty return all keyers on the ME
-      else if(command.payload.data.keyerId == undefined || command.payload.data.keyerId == null || 
-          command.payload.data.keyerState == undefined || command.payload.data.keyerState == null) {
+      else if(command.payload.data.id == undefined || command.payload.data.id == null || 
+          command.payload.data.state == undefined || command.payload.data.state == null) {
         msg.direction = "node";
         msg.command.payload.data = this.data[command.payload.data.ME];
       }
@@ -63,8 +63,8 @@ module.exports = {
         //Set the keyer state
         var packet = Buffer.alloc(4).fill(0);
         packet[0] = command.payload.data.ME;
-        packet[1] = command.payload.data.keyerId;
-        packet[2] = command.payload.data.keyerState ? 1 : 0;
+        packet[1] = command.payload.data.id;
+        packet[2] = command.payload.data.state ? 1 : 0;
         msg.direction = "server";
         msg.command.packet = packet;
       }
@@ -88,8 +88,8 @@ module.exports = {
     if(this.data["keyer" + keyerId] != undefined && this.data["keyer" + keyerId] != null) {
       this.data["keyer" + keyerId].fillSource = fillSource;
       this.data["keyer" + keyerId].keySource = keySource;
-      commandList.list.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyFill", this.data["keyer" + keyerId].fillSource,  this.data["keyer" + keyerId].onAir, false);
-      commandList.list.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyKey", this.data["keyer" + keyerId].keySource, this.data["keyer" + keyerId].onAir, false);
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyFill", this.data["keyer" + keyerId].fillSource,  this.data["keyer" + keyerId].state, false);
+      commandList.list.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyKey", this.data["keyer" + keyerId].keySource, this.data["keyer" + keyerId].state, false);
     }
   },
   //What todo once we are connected
