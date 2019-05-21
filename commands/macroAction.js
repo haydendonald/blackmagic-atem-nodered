@@ -26,7 +26,7 @@ module.exports = {
     this.processData(data, flag, command, commandList, false);
   },
   processData(data, flag, command, commandList) {
-    if(data.readUInt16BE(2) == 65535) {
+    if(data.readUInt16BE(2) > this.macroCount) {
       for(var i in this.data) {
         this.data[i].running = data[0].toString(2)[0] == "1";
         this.data[i].waiting = data[0].toString(2)[1] == "1";
