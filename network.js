@@ -154,6 +154,7 @@ module.exports = function(RED)
                     if(sendBuffer[0].attempts == 2) {
                         //Failed
                         sendBuffer.splice(0, 1);
+                        node.sendStatus("red", "Failed to Send: Timeout");
                     }
                     else {
                         var success = true;
@@ -165,6 +166,7 @@ module.exports = function(RED)
                             //Sent
                             sendBuffer[0].attempts = 2;
                             sendBuffer[0].timeout = 5;
+                            node.sendStatus("yellow", "Sending...");
                         }
                     }
                 }
@@ -346,6 +348,7 @@ module.exports = function(RED)
                     }
                     else {
                         node.error("Unknown connection state: " + flag);
+                        statusCallback("disconnected", "Unknown Connection State");
                     }
 
                     return;
@@ -406,6 +409,7 @@ module.exports = function(RED)
                             if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4))) {
                                 //Respose
                                 sendBuffer.splice(0, 1);
+                                node.sendStatus("green", "Sent!");
                             }
                         }
 
