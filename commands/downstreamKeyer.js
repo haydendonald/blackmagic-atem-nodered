@@ -89,7 +89,7 @@ module.exports = {
   //What todo once we are connected
   afterInit() {
     return {
-      "command": this.cmd,
+      "cmd": this.cmd,
       "data": this.data
     }
   }
