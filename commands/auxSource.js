@@ -12,6 +12,7 @@ module.exports = {
   },
   processData(data, flag, command, commandList) {
     this.data[data[0]] = {
+      "inputNumber": data.readUInt16BE(2),
       "inputSource": commandList.list.inputProperty.findInput(data.readUInt16BE(2))
     }
     command.payload.data = this.data;
@@ -91,7 +92,12 @@ module.exports = {
     return msg;
   },
   //What todo once we are connected
-  afterInit() {
+  afterInit(commandList) {
+    //Update the video source
+    for(var i in this.data) {
+      this.data[i].inputSource = commandList.list.inputProperty.findInput(this.data[i].inputNumber);
+    }
+
     return {
       "cmd": this.cmd,
       "data": this.data

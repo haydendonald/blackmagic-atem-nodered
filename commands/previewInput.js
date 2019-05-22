@@ -13,6 +13,7 @@ module.exports = {
   processData(data, flag, command, commandList, sendTallyUpdates=true) {
     command.payload.cmd = this.cmd;
     command.payload.data.ME = data[0];
+    command.payload.data.inputNumber = data.readUInt16BE(2);
     command.payload.data.videoSource = commandList.list.inputProperty.findInput(data.readUInt16BE(2));
 
     //Add the transition position params if they don't exist
@@ -121,7 +122,12 @@ module.exports = {
     this.data[ME].position = position;
   },
   //What todo once we are connected
-  afterInit() {
+  afterInit(commandList) {
+    //Update the video source
+    for(var i in this.data) {
+      this.data[i].videoSource = commandList.list.inputProperty.findInput(this.data[i].inputNumber);
+    }
+
     return {
       "cmd": this.cmd,
       "data": this.data

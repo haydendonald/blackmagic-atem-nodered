@@ -18,6 +18,9 @@ module.exports = function(RED)
         var sessionId = undefined;
         var timeoutCount = 0;
         var localPacketId = 1;
+        var timeoutInterval = undefined;
+        var handshakeInterval = undefined;
+        var messageProcessingInterval = undefined;
         node.information = {
             "name": name,
             "type": node.type,
@@ -29,8 +32,13 @@ module.exports = function(RED)
         var messageCallbacks = [];
         var statusCallbacks = [];
         var sendBuffer = [];
+        var receiveBuffer = [];
 
-        var sendInterval = setInterval(function() {processSendBuffer();}, 10);
+        //var sendInterval = setInterval(function() {processSendBuffer();}, 10);
+        messageProcessingInterval = setInterval(function() {
+            processReceiveBuffer();
+            processSendBuffer();
+        }, 10);
 
         //Pings the server, returns true if connected
         function checkConnection(func) {
@@ -42,7 +50,9 @@ module.exports = function(RED)
         //When the flows are stopped
         this.on("close", function() {
             clearInterval(pingCheck);
-            clearInterval(sendInterval);
+            clearInterval(messageProcessingInterval);
+            clearInterval(handshakeInterval);
+            clearInterval(timeoutInterval);
             server.close();
             commands.close();
         });
@@ -240,7 +250,7 @@ module.exports = function(RED)
                     for(var key in commands.list) {
                         var cmd = {
                             "topic": "initial",
-                            "payload": commands.list[key].afterInit()
+                            "payload": commands.list[key].afterInit(commands)
                         }
                         if(cmd.payload != false) {
                             cmds.push(cmd);
@@ -283,23 +293,25 @@ module.exports = function(RED)
                     break;
                 }
                 case "disconnected": {
-                    node.sendStatus("red", "Disconnected!");
-                    node.error("Disconnected from ATEM @ " + ipAddress);
-                    node.information.status = "disconnected";
-                    clearInterval(pingCheck);
-                    node.information.connectionTimeout = 0;
-                    commands.close();
-                    var command = {
-                        "topic": "status",
-                        "payload": {
-                            "type": "status",
-                            "connectionStatus": "disconnected"
+                    if(node.information.status !== "disconnected") {
+                        node.sendStatus("red", "Disconnected!");
+                        node.error("Disconnected from ATEM @ " + ipAddress);
+                        node.information.status = "disconnected";
+                        clearInterval(pingCheck);
+                        node.information.connectionTimeout = 0;
+                        commands.close();
+                        var command = {
+                            "topic": "status",
+                            "payload": {
+                                "type": "status",
+                                "connectionStatus": "disconnected"
+                            }
                         }
-                    }
-                    messageCallback(command);
+                        messageCallback(command);
 
-                    //Close server and attempt reconnection
-                    connect(ipAddress, port);
+                        //Close server and attempt reconnection
+                        connect(ipAddress, port);
+                    }
                     break;
                 }
             }
@@ -314,32 +326,237 @@ module.exports = function(RED)
         function handshake() {
             var id = Math.round(Math.random() * 0x7FF);
             statusCallback("connecting", "");
-            try{server.send(commands.packets.requestHandshake, port, ipAddress);}
-            catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
 
-            //Check for connection state
-            pingCheck = setInterval(function() {
-                node.information.connectionTimeout++;
-                if(node.information.connectionTimeout > 10) {
-                    //Lost connection
-                    statusCallback("disconnected", "timeout");
-                    clearInterval(pingCheck);
-                    node.information.connectionTimeout = 0;
-                }
+            handshakeInterval = setInterval(function() {
+                node.sendStatus("yellow", "Attempting Handshake");
+                node.log("Attempting Handshake");
+                try{server.send(commands.packets.requestHandshake, port, ipAddress);}
+                catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
             }, 5000);
 
+            // //Check for connection state
+            // pingCheck = setInterval(function() {
+            //     node.information.connectionTimeout++;
+            //     if(node.information.connectionTimeout > 10) {
+            //         //Lost connection
+            //         statusCallback("disconnected", "timeout");
+            //         clearInterval(pingCheck);
+            //         node.information.connectionTimeout = 0;
+            //     }
+            // }, 5000);
+
             //On message
-            server.on("message", processIncomingMessage);
+            server.on("message", function(message, rinfo) {
+                processIncomingMessage(message, rinfo);
+                clearInterval(handshakeInterval);
+            });
         }
+
+        function processReceiveBuffer() {
+            for(var k = 0;  k <  receiveBuffer.length; k++) {
+                var message = receiveBuffer[k];
+                var flag = message[0] >> 3;
+                var length = ((message[0] & 0x07) << 8) | message[1];
+
+                //Split a singular command into its parts
+                var commandMessage = message.slice(12, length); 
+                var cmds = [];
+                while(commandMessage.length > 0) {
+                    var commandLength = commandMessage.readUInt16BE(0);
+                    var thisMessage = commandMessage.slice(0, commandLength);
+                    cmds.push(thisMessage);
+                    commandMessage = commandMessage.slice(commandLength, length);
+                }
+
+                //Process the commands
+                for(var i = 0; i < cmds.length; i++) {
+                    var command = {
+                        "topic": "command",
+                        "payload": {
+                            "type": undefined,
+                            "raw": {
+                                "flag": commands.findFlag(flag)
+                            },
+                            "data": {}
+                        }
+                    }
+
+                    var length = cmds[i].readUInt16BE(0);
+                    var name =  cmds[i].toString("UTF8", 4, 8);
+                    command.payload.raw.length = length;
+                    command.payload.raw.name = name;
+                    command.payload.raw.packet = cmds[i];
+
+                    // //Answerback flag check for the command that this is a answerback for
+                    if(sendBuffer.length > 0) {
+                        if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) ||  commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) == "") {
+                            //Respose
+                            sendBuffer.splice(0, 1);
+                            node.sendStatus("green", "Sent!");
+                            timeoutCount = 0;
+                        }
+                    }
+
+                    //Check for inital conditions and load in the information otherwise sync
+                    //Flag 1 >> 5 >> 1 (Done)
+                    if(node.information.status !== "connected") {
+                        //Check if the command exists in the supported list and pass its inital information
+                        var cmd = commands.findCommand(name);
+                        if(cmd != null) {
+                            cmd.initializeData(cmds[i].slice(8, length), flag, commands, messageCallbacks);
+                        }
+                    }
+                    else {
+                        //Check if the command exists in the supported list
+                        var cmd = commands.findCommand(name);
+                        if(cmd != null) {
+                            if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
+                                messageCallback(command);
+                                statusCallback("got-data", "");
+                            }
+                        }
+                        else {
+                            command.payload.cmd = "raw";
+                            messageCallback(command);
+                            statusCallback("got-data", "");
+                        }
+                    }
+                }
+
+                node.information.connectionTimeout = 0;
+                receiveBuffer.splice(k, 1);
+            }
+
+           // setTimeout(function(){inProcessingIncoming = false;}, 200);
+        }
+    
+
+
+            //var length = ((message[0] & 0x07) << 8) | message[1];
+            // if(length == rinfo.size) {
+            //     inProcessingIncoming = true;
+            //     var flag = message[0] >> 3;
+            //     messageSessionId = [message[2], message[3]];
+            //     var remotePacketId = [message[10], message[11]];
+
+
+
+            //     if(sessionId[0] != messageSessionId[0] || sessionId[1] != messageSessionId[1]) {}
+            //     else {
+            //         //Our message
+            //         //Check if a packet was processed
+            //         //sendBuffer.splice(0, 1);// should be checking the message type. This may remove messages 
+
+            //         //Reply to each command
+            //         var buffer = new Buffer.alloc(12).fill(0);
+            //         buffer[0] = 0x80;
+            //         buffer[1] = 0x0C;
+            //         buffer[2] = sessionId[0];
+            //         buffer[3] = sessionId[1];
+            //         buffer[4] = remotePacketId[0];
+            //         buffer[5] = remotePacketId[1];
+            //         buffer[9] = 0x41;
+            //         setTimeout(function(){
+            //             try{server.send(buffer, port, ipAddress);}
+            //             catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
+            //         }, 100);
+
+            //         //Split a singular command into its parts
+            //         var commandMessage = message.slice(12, length); 
+            //         var cmds = [];
+            //         while(commandMessage.length > 0) {
+            //             var commandLength = commandMessage.readUInt16BE(0);
+            //             var thisMessage = commandMessage.slice(0, commandLength);
+            //             cmds.push(thisMessage);
+            //             commandMessage = commandMessage.slice(commandLength, length);
+            //         }
+
+            //         //Process the commands
+            //         for(var i = 0; i < cmds.length; i++) {
+            //             var command = {
+            //                 "topic": "command",
+            //                 "payload": {
+            //                     "type": undefined,
+            //                     "raw": {
+            //                         "flag": commands.findFlag(flag)
+            //                     },
+            //                     "data": {}
+            //                 }
+            //             }
+
+
+            //             var length = cmds[i].readUInt16BE(0);
+            //             var name =  cmds[i].toString("UTF8", 4, 8);
+            //             command.payload.raw.length = length;
+            //             command.payload.raw.name = name;
+            //             command.payload.raw.packet = cmds[i];
+
+            //             // //Answerback flag check for the command that this is a answerback for
+            //             if(sendBuffer.length > 0) {
+            //                 if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) ||  commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) == "") {
+            //                     //Respose
+            //                     sendBuffer.splice(0, 1);
+            //                     node.sendStatus("green", "Sent!");
+            //                     timeoutCount = 0;
+            //                 }
+            //             }
+
+            //             //Check for inital conditions and load in the information otherwise sync
+            //             //Flag 1 >> 5 >> 1 (Done)
+            //             if(node.information.status != "connected") {
+            //                 if(flag == commands.flags.initializing && node.information.status == "connecting"){
+            //                     node.information.status = "initializing"; 
+            //                     statusCallback(node.information.status, "");
+            //                 }
+            //                 if(flag == commands.flags.sync && node.information.status == "initializing"){
+            //                     node.information.status = "connected"; 
+            //                     statusCallback(node.information.status, "");
+            //                 }
+
+            //                 //Check if the command exists in the supported list
+            //                 var cmd = commands.findCommand(name);
+            //                 if(cmd != null) {
+            //                     cmd.initializeData(cmds[i].slice(8, length), flag, commands, messageCallbacks);
+            //                 }
+            //             }
+            //             else {
+            //                 //Check if the command exists in the supported list
+            //                 var cmd = commands.findCommand(name);
+            //                 if(cmd != null) {
+            //                     if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
+            //                         messageCallback(command);
+            //                         statusCallback("got-data", "");
+            //                     }
+            //                 }
+            //                 else {
+            //                     command.payload.cmd = "raw";
+            //                     messageCallback(command);
+            //                     statusCallback("got-data", "");
+            //                 }
+            //             }
+            //         }
+
+            //         node.information.connectionTimeout = 0;
+            //     }
+
+            //     setTimeout(function(){inProcessingIncoming = false;}, 200);
 
         //Process the message sent by the ATEM                                                        
         function processIncomingMessage(message, rinfo) {
+            //console.log(message);
+            //Reply if it's our message
             var length = ((message[0] & 0x07) << 8) | message[1];
             if(length == rinfo.size) {
-                inProcessingIncoming = true;
                 var flag = message[0] >> 3;
-                messageSessionId = [message[2], message[3]];
+                var messageSessionId = [message[2], message[3]];
                 var remotePacketId = [message[10], message[11]];
+
+                //Check for disconnection
+                clearInterval(timeoutInterval);
+                timeoutInterval = setInterval(function() {
+                    statusCallback("disconnected", "timeout");
+                    clearInterval(timeoutInterval);
+                }, 2000);
 
                 //Inital connection
                 if(sessionId === undefined) {
@@ -355,16 +572,11 @@ module.exports = function(RED)
                         node.error("Unknown connection state: " + flag);
                         statusCallback("disconnected", "Unknown Connection State");
                     }
-
                     return;
                 }
 
                 if(sessionId[0] != messageSessionId[0] || sessionId[1] != messageSessionId[1]) {}
                 else {
-                    //Our message
-                    //Check if a packet was processed
-                    //sendBuffer.splice(0, 1);// should be checking the message type. This may remove messages 
-
                     //Reply to each command
                     var buffer = new Buffer.alloc(12).fill(0);
                     buffer[0] = 0x80;
@@ -379,86 +591,155 @@ module.exports = function(RED)
                         catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
                     }, 100);
 
-                    //Split a singular command into its parts
-                    var commandMessage = message.slice(12, length); 
-                    var cmds = [];
-                    while(commandMessage.length > 0) {
-                        var commandLength = commandMessage.readUInt16BE(0);
-                        var thisMessage = commandMessage.slice(0, commandLength);
-                        cmds.push(thisMessage);
-                        commandMessage = commandMessage.slice(commandLength, length);
-                    }
-
-                    //Process the commands
-                    for(var i = 0; i < cmds.length; i++) {
-                        var command = {
-                            "topic": "command",
-                            "payload": {
-                                "type": undefined,
-                                "raw": {
-                                    "flag": commands.findFlag(flag)
-                                },
-                                "data": {}
-                            }
+                    //Check if we're connected
+                    if(node.information.status != "connected") {
+                        if(flag == commands.flags.initializing && node.information.status == "connecting") {
+                            node.information.status = "initializing"; 
+                            statusCallback(node.information.status, "");
                         }
-
-
-                        var length = cmds[i].readUInt16BE(0);
-                        var name =  cmds[i].toString("UTF8", 4, 8);
-                        command.payload.raw.length = length;
-                        command.payload.raw.name = name;
-                        command.payload.raw.packet = cmds[i];
-
-                        // //Answerback flag check for the command that this is a answerback for
-                        if(sendBuffer.length > 0) {
-                            if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) ||  commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) == "") {
-                                //Respose
-                                sendBuffer.splice(0, 1);
-                                node.sendStatus("green", "Sent!");
-                                timeoutCount = 0;
-                            }
-                        }
-
-                        //Check for inital conditions and load in the information otherwise sync
-                        //Flag 1 >> 5 >> 1 (Done)
-                        if(node.information.status != "connected") {
-                            if(flag == commands.flags.initializing && node.information.status == "connecting"){
-                                node.information.status = "initializing"; 
+                        if(message.toString("UTF8", 16, 20) === "Time" && flag == commands.flags.sync && node.information.status == "initializing") {
+                            node.information.status = "connected"; 
+                            setTimeout(function() {
                                 statusCallback(node.information.status, "");
-                            }
-                            if(flag == commands.flags.sync && node.information.status == "initializing"){
-                                node.information.status = "connected"; 
-                                statusCallback(node.information.status, "");
-                            }
-
-                            //Check if the command exists in the supported list
-                            var cmd = commands.findCommand(name);
-                            if(cmd != null) {
-                                cmd.initializeData(cmds[i].slice(8, length), flag, commands, messageCallbacks);
-                            }
-                        }
-                        else {
-                            //Check if the command exists in the supported list
-                            var cmd = commands.findCommand(name);
-                            if(cmd != null) {
-                                if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
-                                    messageCallback(command);
-                                    statusCallback("got-data", "");
-                                }
-                            }
-                            else {
-                                command.payload.cmd = "raw";
-                                messageCallback(command);
-                                statusCallback("got-data", "");
-                            }
+                            }, 2000);
                         }
                     }
-
-                    node.information.connectionTimeout = 0;
                 }
 
-                setTimeout(function(){inProcessingIncoming = false;}, 200);
+                receiveBuffer.push(message);
             }
+
+            // var length = ((message[0] & 0x07) << 8) | message[1];
+            // if(length == rinfo.size) {
+            //     inProcessingIncoming = true;
+            //     var flag = message[0] >> 3;
+            //     messageSessionId = [message[2], message[3]];
+            //     var remotePacketId = [message[10], message[11]];
+
+            //     clearInterval(timeoutInterval);
+            //     timeoutInterval = setInterval(function() {
+            //         statusCallback("disconnected", "timeout");
+            //         clearInterval(timeoutInterval);
+            //     }, 2000);
+
+            //     //Inital connection
+            //     if(sessionId === undefined) {
+            //         if(flag == commands.flags.connect) {
+            //             //Send handshake answerback
+            //             try{server.send(commands.packets.handshakeAnswerback, port, ipAddress);}
+            //             catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
+            //         }
+            //         else if(flag == commands.flags.sync) {
+            //             sessionId = messageSessionId;
+            //         }
+            //         else {
+            //             node.error("Unknown connection state: " + flag);
+            //             statusCallback("disconnected", "Unknown Connection State");
+            //         }
+
+            //         return;
+            //     }
+
+            //     if(sessionId[0] != messageSessionId[0] || sessionId[1] != messageSessionId[1]) {}
+            //     else {
+            //         //Our message
+            //         //Check if a packet was processed
+            //         //sendBuffer.splice(0, 1);// should be checking the message type. This may remove messages 
+
+            //         //Reply to each command
+            //         var buffer = new Buffer.alloc(12).fill(0);
+            //         buffer[0] = 0x80;
+            //         buffer[1] = 0x0C;
+            //         buffer[2] = sessionId[0];
+            //         buffer[3] = sessionId[1];
+            //         buffer[4] = remotePacketId[0];
+            //         buffer[5] = remotePacketId[1];
+            //         buffer[9] = 0x41;
+            //         setTimeout(function(){
+            //             try{server.send(buffer, port, ipAddress);}
+            //             catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
+            //         }, 100);
+
+            //         //Split a singular command into its parts
+            //         var commandMessage = message.slice(12, length); 
+            //         var cmds = [];
+            //         while(commandMessage.length > 0) {
+            //             var commandLength = commandMessage.readUInt16BE(0);
+            //             var thisMessage = commandMessage.slice(0, commandLength);
+            //             cmds.push(thisMessage);
+            //             commandMessage = commandMessage.slice(commandLength, length);
+            //         }
+
+            //         //Process the commands
+            //         for(var i = 0; i < cmds.length; i++) {
+            //             var command = {
+            //                 "topic": "command",
+            //                 "payload": {
+            //                     "type": undefined,
+            //                     "raw": {
+            //                         "flag": commands.findFlag(flag)
+            //                     },
+            //                     "data": {}
+            //                 }
+            //             }
+
+
+            //             var length = cmds[i].readUInt16BE(0);
+            //             var name =  cmds[i].toString("UTF8", 4, 8);
+            //             command.payload.raw.length = length;
+            //             command.payload.raw.name = name;
+            //             command.payload.raw.packet = cmds[i];
+
+            //             // //Answerback flag check for the command that this is a answerback for
+            //             if(sendBuffer.length > 0) {
+            //                 if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) ||  commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) == "") {
+            //                     //Respose
+            //                     sendBuffer.splice(0, 1);
+            //                     node.sendStatus("green", "Sent!");
+            //                     timeoutCount = 0;
+            //                 }
+            //             }
+
+            //             //Check for inital conditions and load in the information otherwise sync
+            //             //Flag 1 >> 5 >> 1 (Done)
+            //             if(node.information.status != "connected") {
+            //                 if(flag == commands.flags.initializing && node.information.status == "connecting"){
+            //                     node.information.status = "initializing"; 
+            //                     statusCallback(node.information.status, "");
+            //                 }
+            //                 if(flag == commands.flags.sync && node.information.status == "initializing"){
+            //                     node.information.status = "connected"; 
+            //                     statusCallback(node.information.status, "");
+            //                 }
+
+            //                 //Check if the command exists in the supported list
+            //                 var cmd = commands.findCommand(name);
+            //                 if(cmd != null) {
+            //                     cmd.initializeData(cmds[i].slice(8, length), flag, commands, messageCallbacks);
+            //                 }
+            //             }
+            //             else {
+            //                 //Check if the command exists in the supported list
+            //                 var cmd = commands.findCommand(name);
+            //                 if(cmd != null) {
+            //                     if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
+            //                         messageCallback(command);
+            //                         statusCallback("got-data", "");
+            //                     }
+            //                 }
+            //                 else {
+            //                     command.payload.cmd = "raw";
+            //                     messageCallback(command);
+            //                     statusCallback("got-data", "");
+            //                 }
+            //             }
+            //         }
+
+            //         node.information.connectionTimeout = 0;
+            //     }
+
+            //     setTimeout(function(){inProcessingIncoming = false;}, 200);
+           // }
         }
     }
 

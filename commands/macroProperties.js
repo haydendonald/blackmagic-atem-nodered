@@ -46,6 +46,9 @@ module.exports = {
   },
   //What todo once we are connected
   afterInit() {
-    return false;
+    return {
+      "cmd": this.cmd,
+      "data": this.data
+    }
   }
 }
