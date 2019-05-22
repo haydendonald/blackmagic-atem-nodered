@@ -5,7 +5,7 @@ module.exports = {
   macroCount: 100,
   data: undefined,
   close() {
-    this.data = {};
+    this.data = undefined;
   },
   initializeData(data, flag, commandList) {
     var command = {"payload":{"data":{}}};
