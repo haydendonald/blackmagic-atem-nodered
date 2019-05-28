@@ -84,6 +84,7 @@ module.exports = {
       keyer.keySource = keySource;
       commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyFill", this.data[keyerId].fillSource, keyer.state, false);
       commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyKey", this.data[keyerId].keySource, keyer.state, false);
+      console.log(this.data[keyerId]);
     }
   },
   //What todo once we are connected
