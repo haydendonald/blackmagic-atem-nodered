@@ -8,6 +8,7 @@ Please report any bugs that you may find. We will be using this in a automation 
 - Check if the output type works correctly [Minor]
 - Unknown connection state (flag) 0x06 [Minor]. This may be a "atem full" error
 - Sometimes the connection is not successful (This may be a timeout issue) [Minor]
+- Downstream keyer auto seems to be a bit slow [Minor]
 
 ## Supported commands
 - Aux Source
