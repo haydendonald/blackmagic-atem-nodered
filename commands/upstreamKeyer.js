@@ -85,7 +85,7 @@ module.exports = {
   },
   //Add more keyer information
   addKeyerInformation(keyerId, fillSource, keySource, commandList) {
-    if(this.data[keyerId] != undefined && this.data[keyerId] != null) {
+    if(this.data[keyerId] != undefined || this.data[keyerId] != null) {
       this.data[keyerId].fillSource = fillSource;
       this.data[keyerId].keySource = keySource;
       commandList.list.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyFill", this.data[keyerId].fillSource,  this.data[keyerId].state, false);

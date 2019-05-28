@@ -13,7 +13,7 @@ module.exports = {
   processData(data, flag, command, commandList, sendTallyUpdates=true) {
     command.payload.cmd = this.cmd;
 
-    if(this.data[data[0]] == undefined || this.data["keyer" + data[0]] == null) {
+    if(this.data[data[0]] == undefined || this.data[data[0]] == null) {
       this.data[data[0]] = {};
       this.data[data[0]].fillSource = undefined;
       this.data[data[0]].keySource = undefined;
@@ -84,7 +84,6 @@ module.exports = {
       keyer.keySource = keySource;
       commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyFill", this.data[keyerId].fillSource, keyer.state, false);
       commandList.list.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyKey", this.data[keyerId].keySource, keyer.state, false);
-      console.log(this.data[keyerId]);
     }
   },
   //What todo once we are connected
