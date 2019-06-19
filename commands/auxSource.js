@@ -17,8 +17,8 @@ module.exports = {
     }
     command.payload.data = this.data;
     command.payload.cmd = this.cmd;
-    if(flag != commandList.flags.sync){return false;}
-    return true;
+    
+    return flag==commandList.flags.initializing;
   },
   sendData(command, commandList) {
     var error = null;
@@ -70,12 +70,6 @@ module.exports = {
         //Return the current input source
          msg.direction = "node";
          msg.command.payload.data = this.data;
-        // if(command.payload.data.id === undefined || command.payload.data.id === null) {
-        //   msg.command.payload.data = this.data;
-        // }
-        // else {
-          
-        // }
       }
     }
 
