@@ -33,6 +33,10 @@ module.exports = {
         0x00, 0x03, 0x00, 0x00
       ])
   },
+  //Check if a variable is not null or undefined
+  exists: function(variable) {
+    return variable !== null && variable !== undefined;
+  },
   list: {
       version: require("./version.js"),
       time: require("./time.js"),
@@ -51,6 +55,7 @@ module.exports = {
       warning: require("./warning.js"),
       topology: require("./topology.js"),
       macroProperties: require("./macroProperties.js")
+      //superSource: require("./superSource.js")
   },
   //Return the get for set and set for get command name
   findInvertedDirectionName(name) {

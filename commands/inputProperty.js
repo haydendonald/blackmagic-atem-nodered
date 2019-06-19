@@ -224,18 +224,18 @@ module.exports = {
 
       this.data.inputs[key].tally = count > 0;
 
-      if(sendTallyUpdates && wasLive) {
-        for(var i in messageCallbacks) {
-            var msg = {
-              "topic": "command",
-              "payload": {
-                "cmd": this.cmd,
-                "data": this.data
-              }
-            }
-            messageCallbacks[i](msg);
-          }
-        }
+      // if(sendTallyUpdates && wasLive) {
+      //   for(var i in messageCallbacks) {
+      //       var msg = {
+      //         "topic": "command",
+      //         "payload": {
+      //           "cmd": this.cmd,
+      //           "data": this.data
+      //         }
+      //       }
+      //       //messageCallbacks[i](msg);
+      //     }
+      //   }
       }
     
 
@@ -252,18 +252,18 @@ module.exports = {
 
         this.data.inputs[key].tally = count > 0;
 
-        if(sendTallyUpdates) {   
-          for(var i in messageCallbacks) {
-            var msg = {
-              "topic": "command",
-              "payload": {
-                "cmd": this.cmd,
-                "data": this.data
-              }
-            }
-            messageCallbacks[i](msg);
-          }
-        }
+        // if(sendTallyUpdates) {   
+        //   for(var i in messageCallbacks) {
+        //     var msg = {
+        //       "topic": "command",
+        //       "payload": {
+        //         "cmd": this.cmd,
+        //         "data": this.data
+        //       }
+        //     }
+        //     //messageCallbacks[i](msg);
+        //   }
+        // }
       }
     }
   },

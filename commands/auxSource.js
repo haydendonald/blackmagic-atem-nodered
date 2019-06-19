@@ -13,7 +13,7 @@ module.exports = {
   processData(data, flag, command, commandList) {
     this.data[data[0]] = {
       "inputNumber": data.readUInt16BE(2),
-      "inputSource": commandList.list.inputProperty.findInput(data.readUInt16BE(2))
+      "videoSource": commandList.list.inputProperty.findInput(data.readUInt16BE(2))
     }
     command.payload.data = this.data;
     command.payload.cmd = this.cmd;
@@ -40,18 +40,18 @@ module.exports = {
         msg.direction = "node";
         msg.command.payload.data = this.data;
       }
-      else if(command.payload.data.inputSource !== undefined && command.payload.data.inputSource !== null) {
+      else if(command.payload.data.videoSource !== undefined && command.payload.data.videoSource !== null) {
         //Find the searcher for the video source
         videoSource = null;
-        if(command.payload.data.inputSource.id == undefined || command.payload.data.inputSource.id == null) {
-          if(command.payload.data.inputSource.longName == undefined || command.payload.data.inputSource.longName == null) {
-            if(command.payload.data.inputSource.shortName == undefined || command.payload.data.inputSource.shortName == null) {
+        if(command.payload.data.videoSource.id == undefined || command.payload.data.videoSource.id == null) {
+          if(command.payload.data.videoSource.longName == undefined || command.payload.data.videoSource.longName == null) {
+            if(command.payload.data.videoSource.shortName == undefined || command.payload.data.videoSource.shortName == null) {
             }
-            else {videoSource = command.payload.data.inputSource.shortName; }
+            else {videoSource = command.payload.data.videoSource.shortName; }
           }
-          else {videoSource = command.payload.data.inputSource.longName;}
+          else {videoSource = command.payload.data.videoSource.longName;}
         }
-        else {videoSource = command.payload.data.inputSource.id;}
+        else {videoSource = command.payload.data.videoSource.id;}
         videoSource = commandList.list.inputProperty.findInput(videoSource);
 
         if(videoSource == undefined || videoSource == null){error="That input source was not found";}
@@ -68,13 +68,14 @@ module.exports = {
       }
       else {
         //Return the current input source
-        msg.direction = "node";
-        if(command.payload.data.id === undefined || command.payload.data.id === null) {
-          msg.command.payload.data = this.data;
-        }
-        else {
-          msg.command.payload.data = this.data[command.payload.data.id];
-        }
+         msg.direction = "node";
+         msg.command.payload.data = this.data;
+        // if(command.payload.data.id === undefined || command.payload.data.id === null) {
+        //   msg.command.payload.data = this.data;
+        // }
+        // else {
+          
+        // }
       }
     }
 
@@ -95,7 +96,7 @@ module.exports = {
   afterInit(commandList) {
     //Update the video source
     for(var i in this.data) {
-      this.data[i].inputSource = commandList.list.inputProperty.findInput(this.data[i].inputNumber);
+      this.data[i].videoSource = commandList.list.inputProperty.findInput(this.data[i].inputNumber);
     }
 
     return {

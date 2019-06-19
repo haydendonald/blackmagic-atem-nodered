@@ -29,7 +29,6 @@ module.exports = {
     commandList.list.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyKey", this.data[((data[0] * 10) + (data[1]))].keySource,  data[2] == 0x01, sendTallyUpdates);
     
     command.payload.data = this.data;
-    //if(flag != commandList.flags.sync){return false;}
     return true;
   },
   sendData(command, commandList) {

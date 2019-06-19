@@ -11,7 +11,6 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-
     //Put this data in the downstream keyer
     this.data[data[0]] = {};
     this.data[data[0]].fillSourceID = data.readUInt16BE(2);

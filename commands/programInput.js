@@ -6,9 +6,11 @@ module.exports = {
   close() {
     this.data = {};
   },
-  initializeData(data, flag, commandList) {
+  messageCallbacks: [],
+  initializeData(data, flag, commandList, msgCallbacks) {
     var command = {"payload":{"data":{}}};
     this.processData(data, flag, command, commandList, false);
+    messageCallbacks = msgCallbacks;
   },
   processData(data, flag, command, commandList, sendTallyUpdates=true) {
     command.payload.cmd = "programInput";
@@ -24,10 +26,24 @@ module.exports = {
     }
 
     commandList.list.inputProperty.updateTallysME(data[0], "programTally", command.payload.data.videoSource, sendTallyUpdates);
+
+    //Send the input properties of the updated inputs
+    if(sendTallyUpdates && flag==commandList.flags.initializing) {
+      for(var i in messageCallbacks) {
+          var msg = {
+            "topic": "command",
+            "payload": {
+              "cmd": commandList.list.inputProperty.cmd,
+              "data": commandList.list.inputProperty.data,
+            }
+          }
+        messageCallbacks[i](msg);
+      }
+    }
+
     this.data[command.payload.data.ME] = command.payload.data;
     command.payload.data = this.data;
-    //if(flag != commandList.flags.sync){return false;}
-    return true;
+    return flag==commandList.flags.initializing;
   },
   sendData(command, commandList) {
     var error = null;

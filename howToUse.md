@@ -251,7 +251,7 @@ var msg = {
 Controls the aux sources
 ### cmd = "auxSource"
 ### id = The aux source id
-### inputSource = The input source set to this aux input
+### videoSource = The input source set to this aux input
 ### mask = If the mask is turned on or not (usually true)
 
 ```
@@ -271,9 +271,9 @@ var msg = {
 var msg = {
     "payload": {
         "cmd": "auxSource",
-        "id": 0,
         "data": {
-            "inputSource": {
+            "id": 0,
+            "videoSource": {
                 "id": 0,
                 "shortName": "blk",
                 "longName": "black" // Only one of these is required

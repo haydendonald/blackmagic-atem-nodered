@@ -24,10 +24,24 @@ module.exports = {
     }
     
     commandList.list.inputProperty.updateTallysME(data[0], "previewTally", command.payload.data.videoSource, sendTallyUpdates);
+
+    //Send the input properties of the updated inputs
+    if(sendTallyUpdates && flag==commandList.flags.initializing) {
+      for(var i in messageCallbacks) {
+          var msg = {
+            "topic": "command",
+            "payload": {
+              "cmd": commandList.list.inputProperty.cmd,
+              "data": commandList.list.inputProperty.data,
+            }
+          }
+        messageCallbacks[i](msg);
+      }
+    }
+
     this.data[command.payload.data.ME] = command.payload.data;
     command.payload.data = this.data;
-    //if(flag != commandList.flags.sync){return false;}
-    return true;
+    return flag==commandList.flags.initializing;
   },
   sendData(command, commandList) {
     var error = null;
