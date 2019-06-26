@@ -1,6 +1,6 @@
 {
   "name": "blackmagic-atem-nodered",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "Provides control of a BlackMagic ATEM",
   "main": "",
   "repository": {
@@ -9,6 +9,7 @@
   },
   "license": "Apache-2.0",
   "keywords": [
+    "node-red",
     "blackmagic",
     "black",
     "magic",
