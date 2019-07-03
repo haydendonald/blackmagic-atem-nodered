@@ -35,13 +35,8 @@ module.exports = function(RED)
         var sendBuffer = [];
         var receiveBuffer = [];
 
-        //var sendInterval = setInterval(function() {processSendBuffer();}, 10);
-        messageProcessingInterval = setInterval(function() {
-            if(processBuffers == true) {
-                processReceiveBuffer();
-                processSendBuffer();
-            }
-        }, 100);
+        var sendInterval = setInterval(function() {processSendBuffer();}, 50);
+        var receiveInterval = setInterval(function() {processReceiveBuffer();}, 5);
 
         //Pings the server, returns true if connected
         function checkConnection(func) {
@@ -53,7 +48,8 @@ module.exports = function(RED)
         //When the flows are stopped
         this.on("close", function() {
             clearInterval(pingCheck);
-            clearInterval(messageProcessingInterval);
+            clearInterval(sendInterval);
+            clearInterval(receiveInterval);
             clearInterval(handshakeInterval);
             clearInterval(timeoutInterval);
             server.close();
@@ -162,16 +158,17 @@ module.exports = function(RED)
 
         //Send out all commands in the send buffer
         function processSendBuffer() {
-            //Limit the send buffer to 20 commands
-            if(sendBuffer.length > 20) {
-                sendBuffer.splice(0, 20);
+            //Limit the send buffer to 5 commands
+            if(sendBuffer.length > 5) {
+                sendBuffer.splice(0, sendBuffer.length - 5);
             }
 
-            if(sendBuffer.length > 0 && inProcessingIncoming == false) {
+            if(sendBuffer.length > 0) {
                 localPacketId++;
-                try{server.send(sendBuffer.pop().packet, port, ipAddress);}
-                catch(e){node.error("Attempted to send a message but the server was closed: " + e); success = false;}
+                try{server.send(sendBuffer[sendBuffer.length - 1].packet, port, ipAddress);}
+                catch(e){node.error("Attempted to send a message but the server was closed: " + e); success = false; sendBuffer = [];}
                 node.sendStatus("yellow", "Sending...");
+                sendBuffer.splice(sendBuffer.length - 1, 1);
             }
             // if(sendBuffer.length > 0 && inProcessingIncoming == false) {
             //     if(sendBuffer[0].timeout <= 0) {
