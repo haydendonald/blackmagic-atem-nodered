@@ -9,6 +9,8 @@ Please report any bugs that you may find. We will be using this in a automation 
 - Unknown connection state (flag) 0x06 [Minor]. This may be a "atem full" error
 - Sometimes the connection is not successful (This may be a timeout issue) [Minor]
 - Downstream keyer auto seems to be a bit slow [Minor]
+- Currently detection of disconnection is not working [Major]
+- Transition position is causing disconnects [Major]
 
 ## Supported commands
 - Aux Source

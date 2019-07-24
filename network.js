@@ -35,8 +35,8 @@ module.exports = function(RED)
         var sendBuffer = [];
         var receiveBuffer = [];
 
-        var sendInterval = setInterval(function() {processSendBuffer();}, 50);
-        var receiveInterval = setInterval(function() {processReceiveBuffer();}, 5);
+        var sendInterval = setInterval(function() {processSendBuffer();}, 20);
+        var receiveInterval = setInterval(function() {processReceiveBuffer();}, 20);
 
         //Pings the server, returns true if connected
         function checkConnection(func) {

@@ -54,7 +54,8 @@ module.exports = {
       upstreamKeyerConfig: require("./upstreamKeyerConfig.js"),
       warning: require("./warning.js"),
       topology: require("./topology.js"),
-      macroProperties: require("./macroProperties.js")
+      macroProperties: require("./macroProperties.js"),
+      transitionMix: require("./transitionMix.js")
       //superSource: require("./superSource.js")
   },
   //Return the get for set and set for get command name
