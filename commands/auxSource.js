@@ -18,7 +18,8 @@ module.exports = {
     command.payload.data = this.data;
     command.payload.cmd = this.cmd;
     
-    return flag==commandList.flags.initializing;
+    //return flag==commandList.flags.initializing;
+    return true;
   },
   sendData(command, commandList) {
     var error = null;

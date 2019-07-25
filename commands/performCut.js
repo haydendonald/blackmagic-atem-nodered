@@ -32,6 +32,7 @@ module.exports = {
       packet[0] = command.payload.data.ME;
       msg.direction = "server";
       msg.command.packet = packet; 
+      msg.payload = {"cmd":this.cmd};
     }
 
     if(error != null) {

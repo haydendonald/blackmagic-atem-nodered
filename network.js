@@ -262,6 +262,7 @@ module.exports = function(RED)
                                 //Generate the packet
                                 var nameBuffer = new Buffer.from(success.name);
                                 sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]))); 
+
                                 break;
                             }
                             default: {
