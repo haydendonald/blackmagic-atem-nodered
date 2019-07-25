@@ -209,7 +209,7 @@ module.exports = function(RED)
                                     updateConnectionState(commands.connectionStates.disconnected);
                                 }else{messageTime++;}
                             }
-                        }, 100);
+                        }, 300);
                         break;
                     }
                 }
@@ -464,7 +464,7 @@ module.exports = function(RED)
             }
         }
     }
-    
+
     //Add the node
     RED.nodes.registerType("atem-network", ATEMNetwork);
 }

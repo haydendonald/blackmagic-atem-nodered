@@ -28,6 +28,66 @@ module.exports = {
     initializing: 0x02,
     connected: 0x03
   },
+  cameraOptions: {
+    adjustmentDomain: {
+      lens: 0x00,
+      camera: 0x01,
+      chip: 0x08
+    },
+    lensFeature: {
+      focus: 0x00,
+      autoFocused: 0x01,
+      iris: 0x03,
+      zoom: 0x09
+    },
+    cameraFeature: {
+      gain: 0x01,
+      whiteBalance: 0x02,
+      shutter: 0x05,
+      gainValues: {
+        "+0db": 760,
+        "+6db": 1272,
+        "+12db": 2296,
+        "+18db": 4344,
+        "+24db": 8440,
+      },
+      whiteBalance: {
+        "3200K": 3200,
+        "4500K": 4500,
+        "5000K": 5000,
+        "5600K": 5600,
+        "6500K": 6500,
+        "7500K": 7500
+      },
+      shutter: {
+        "1/50": 20000,
+        "1/60": 16667,
+        "1/75": 13333,
+        "1/90": 11111,
+        "1/100": 10000,
+        "1/120": 8333,
+        "1/150": 6667,
+        "1/180": 5556,
+        "1/250": 4000,
+        "1/360": 2778,
+        "1/500": 2000,
+        "1/725": 1379,
+        "1/1000": 1000,
+        "1/1450": 690,
+        "1/2000": 500,
+      }
+    },
+    chipFeature: {
+      lift: 0x00,
+      gamma: 0x01,
+      gain: 0x02,
+      aperture: 0x03,
+      contrast: 0x04,
+      lum: 0x05,
+      hueSaturation: 0x06
+    }
+  },
+
   packets: {
       // requestHandshake: new Buffer([
       //   0x10, 0x14, 0x53, 0xAB,
@@ -89,6 +149,7 @@ module.exports = {
       topology: require("./topology.js"),
       macroProperties: require("./macroProperties.js"),
       transitionMix: require("./transitionMix.js")
+      //cameraControl: require("./cameraControl.js")
       //superSource: require("./superSource.js")
   },
   //Return the get for set and set for get command name
