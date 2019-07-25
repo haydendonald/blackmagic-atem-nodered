@@ -18,7 +18,7 @@ module.exports = {
     this.data[data[0]].keySourceID = data.readUInt16BE(4);
     this.data[data[0]].keySource = commandList.list.inputProperty.findInput(data.readUInt16BE(4));
     commandList.list.downstreamKeyer.addKeyerInformation(data[0], this.data[data[0]].fillSource, this.data[data[0]].keySource, commandList);
-    return true;
+    return false;
   },
   sendData(command, commandList) {
     var msg = {

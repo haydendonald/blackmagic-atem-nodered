@@ -41,7 +41,7 @@ module.exports = {
 
     this.data[command.payload.data.ME] = command.payload.data;
     command.payload.data = this.data;
-    return flag==commandList.flags.initializing;
+    return flag==commandList.flags.sync;
   },
   sendData(command, commandList) {
     var error = null;

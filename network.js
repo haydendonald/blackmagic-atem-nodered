@@ -8,60 +8,219 @@ module.exports = function(RED)
     function ATEMNetwork(config)
     {
         RED.nodes.createNode(this, config);
-        var inProcessingIncoming = false;
         var node = this;
         var name = config.name;
         var ipAddress = config.ipAddress;
         var port = 9910;
         var server = null;
-        var pingCheck = null;
-        var sessionId = undefined;
-        var timeoutCount = 0;
+        var sessionId = null;
         var localPacketId = 1;
-        var timeoutInterval = undefined;
-        var handshakeInterval = undefined;
-        var messageProcessingInterval = undefined;
-        var processBuffers = true;
-        node.information = {
-            "name": name,
-            "type": node.type,
-            "status": "disconnected",
-            "connectionTimeout": 0,
-            "debug": true
-        }
-        
+        var heartBeatInterval = undefined;
+        var receiveInterval = undefined;
+        var sendInterval = undefined;
+        var messageTime = 0;
+        var connectionAttempts = 0;
+        var lastSentError = "";
+        var connectionState = commands.connectionStates.disconnected;
         var messageCallbacks = [];
         var statusCallbacks = [];
         var sendBuffer = [];
         var receiveBuffer = [];
 
-        var sendInterval = setInterval(function() {processSendBuffer();}, 20);
-        var receiveInterval = setInterval(function() {processReceiveBuffer();}, 20);
+        //On redeploy
+        node.on("close", function() {
+            closeConnection();
+            clearInterval(receiveInterval);
+            messageCallbacks = [];
+            statusCallbacks = [];
+            lastSentError = "";
+            localPacketId = 1;
+        });
 
-        //Pings the server, returns true if connected
-        function checkConnection(func) {
-            ping.sys.probe(ipAddress, function(status) {
-                func(status);
-            });
+        // //Process the message sent by the ATEM                                                        
+        // function processIncomingMessage(message, rinfo) {
+    
+        // //Reply if it's our message
+        // var length = ((message[0] & 0x07) << 8) | message[1];
+        // if(length == rinfo.size) {
+        //     var flag = message[0] >> 3;
+        //     var messageSessionId = [message[2], message[3]];
+        //     var remotePacketId = [message[10], message[11]];
+
+        //     //Check for disconnection
+        //     clearInterval(timeoutInterval);
+        //     timeoutInterval = setInterval(function() {
+        //         statusCallback("disconnected", "timeout");
+        //         clearInterval(timeoutInterval);
+        //     }, 2000);
+
+        //     //Inital connection
+        //     if(sessionId === undefined) {
+        //         if(flag == commands.flags.connect) {
+        //             //Send handshake answerback
+        //             try{server.send(commands.packets.handshakeAnswerback, port, ipAddress);}
+        //             catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
+        //         }
+        //         else if(flag == commands.flags.sync) {
+        //             sessionId = messageSessionId;
+        //         }
+        //         else {
+        //             node.error("Unknown connection state: " + flag);
+        //             statusCallback("disconnected", "Unknown Connection State");
+        //         }
+        //         return;
+        //     }
+
+        //     if(sessionId[0] != messageSessionId[0] || sessionId[1] != messageSessionId[1]) {}
+        //     else {
+        //         //Reply to each command
+        //         var buffer = new Buffer.alloc(12).fill(0);
+        //         buffer[0] = 0x80;
+        //         buffer[1] = 0x0C;
+        //         buffer[2] = sessionId[0];
+        //         buffer[3] = sessionId[1];
+        //         buffer[4] = remotePacketId[0];
+        //         buffer[5] = remotePacketId[1];
+        //         buffer[9] = 0x41;
+
+        //         sendMessage(buffer);
+
+        //         // setTimeout(function(){
+        //         //     try{server.send(buffer, port, ipAddress);}
+        //         //     catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
+        //         // }, 100);
+
+        //         // //Check if we're connected
+        //         // if(node.information.status != "connected") {
+        //         //     if(flag == commands.flags.initializing && node.information.status == "connecting") {
+        //         //         node.information.status = "initializing"; 
+        //         //         statusCallback(node.information.status, "");
+        //         //     }
+        //         //     if(message.toString("UTF8", 16, 20) === "Time" && flag == commands.flags.sync && node.information.status == "initializing") {
+        //         //         node.information.status = "connected"; 
+        //         //         setTimeout(function() {
+        //         //             statusCallback(node.information.status, "");
+        //         //         }, 2000);
+        //         //     }
+        //         // }
+        //     }
+
+        //     receiveBuffer.push(message);
+        // }
+        // }
+
+        //Send out a error
+        function sendError(errorNode, errorMessage) {
+            if(lastSentError !== errorNode + ":"+ errorMessage) {
+                lastSentError = errorNode + ":" + errorMessage;
+                node.sendStatus("red", errorNode, errorMessage);
+            }
         }
 
-        //When the flows are stopped
-        this.on("close", function() {
-            clearInterval(pingCheck);
-            clearInterval(sendInterval);
-            clearInterval(receiveInterval);
-            clearInterval(handshakeInterval);
-            clearInterval(timeoutInterval);
+        //Attempt to send a message to the ATEM
+        function sendMessage(message) {
+            try{server.send(message, port, ipAddress);}
+            catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
+        }
+
+        //Close the connection
+        function closeConnection() {
+            sendBuffer = [];
+            clearInterval(heartBeatInterval);
             server.close();
+            server = null;
+            sessionId = null;
+            localPacketId = 1;
             commands.close();
-        });
+            receiveBuffer = [];
+            connectionState = commands.connectionStates.disconnected;
+        }
+
+        //Send a message to the subscribed nodes (appears on the flow)
+        node.sendStatus = function(colour, message, extraInformation = "") {
+            for(var i = 0; i < statusCallbacks.length; i++) {
+                statusCallbacks[i](colour, message, extraInformation);
+            }
+        }
+
+        //Send a message to the subscribed nodes (appears on the flow)
+        node.sendMessage = function(message) {
+            for(var i = 0; i < messageCallbacks.length; i++) {
+                messageCallbacks[i](message);
+            }
+        }
+
+        //Callback definitions
+        node.addStatusCallback = function(func) {statusCallbacks.push(func);}
+        node.addMessageCallback = function(func) {messageCallbacks.push(func);}
+
+        //When a message is received and processed send it out the output
+        function messageCallback(command) {
+            node.sendMessage(command);
+        }
+
+        //Update the connection state
+        function updateConnectionState(state) {
+            if(state != connectionState) {
+                var msg = {
+                    "topic": "status",
+                    "payload": {"connectionStatus": Object.keys(commands.connectionStates)[state]}
+                }
+                switch(state) {
+                    case commands.connectionStates.disconnected: {
+                        if(connectionState == commands.connectionStates.connected){node.error("Disconnected from ATEM @ " + ipAddress);}
+                        node.sendStatus("red", "Disconnected");
+                        closeConnection();
+
+                        //Depending on the connection attempts change the time taken to retry
+                        if(connectionAttempts < 3) {
+                            setTimeout(function(){connect();}, 1000);
+                        }
+                        else {
+                            node.error("Failed to connect 3 times waiting 30 seconds before trying again");
+                            setTimeout(function(){connect();}, 30000);
+                        }
+                        break;
+                    }
+                    case commands.connectionStates.connected: {
+                        connectionAttempts = 0;
+                        messageTime = 0;
+                        node.sendStatus("green", "Connected");
+                        if(connectionState != commands.connectionStates.connected){node.log("Connected to ATEM @ " + ipAddress);}
+
+                        //Send out all the inital information
+                        var cmds = [];
+                        for(var key in commands.list) {
+                            var cmd = {
+                                "topic": "initial",
+                                "payload": commands.list[key].afterInit(commands)
+                            }
+                            if(cmd.payload != false) {
+                                cmds.push(cmd);
+                            }
+                        }
+                        messageCallback(cmds);
+
+
+                        //Check for heartbeat every second
+                        heartBeatInterval = setInterval(function() {
+                            if(connectionState == commands.connectionStates.connected) {
+                                if(messageTime > 5) {
+                                    updateConnectionState(commands.connectionStates.disconnected);
+                                }else{messageTime++;}
+                            }
+                        }, 100);
+                        break;
+                    }
+                }
+                connectionState = state;
+                node.sendMessage(msg);
+            }
+        }
 
         //Process incoming message object (this does no validation so this needs to be done before calling this fn)
         this.send = function(msg, sender) {
-            if(node.information.status !== "connected") {
-                node.sendStatus("red", "Not Connected!");
-            }
-            else {
+            if(connectionState == commands.connectionStates.connected) {
                 var cmd = commands.findCommand(msg.payload.cmd);
                 if(cmd == null) {
                     if(msg.payload.cmd.toUpperCase() == "RAW") {
@@ -73,7 +232,7 @@ module.exports = function(RED)
                             msg.payload.data.packet = Buffer.concat([nameBuffer, msg.payload.data.packet]);
                         }
                         catch(error){}
-                        sendBuffer.push(generatePacket(msg.payload.data.packet, sender));
+                        sendBuffer.push(generatePacket(msg.payload.data.packet));
                     }
                     else {
                         node.sendStatus("red", "Unknown Command", "Unknown command: " + msg.payload.cmd);
@@ -101,20 +260,8 @@ module.exports = function(RED)
                             //The data needs to be requested from the server
                             case "server": {
                                 //Generate the packet
-                                var sendIt = true;
                                 var nameBuffer = new Buffer.from(success.name);
-
-                                //Check if the command already exists in the buffer, if so don't add another one!
-                                for(var k in sendBuffer) {
-                                    if(sendBuffer[k].commandPacket.compare(Buffer.concat([nameBuffer, success.command.packet])) == 0) {
-                                        sendIt = false;
-                                    }
-                                }
-
-                                if(sendIt == true) {
-                                    sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]), sender)); 
-                                }
-
+                                sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]))); 
                                 break;
                             }
                             default: {
@@ -122,250 +269,21 @@ module.exports = function(RED)
                                 break;
                             }
                         }
-
                     }
                     else {
                         node.sendStatus("red", "Internal Error", "The packet was null");
                     }
                 }
             }
-        }
-
-        //Generates a packet. Expects a commandPacket containing the command from the name >>
-        function generatePacket(commandPacket, sender) {
-            var message = {
-                "packet": null,
-                "packetId": localPacketId,
-                "commandPacket": commandPacket,
-                "sender": sender,
-                "attempts": 1,
-                "timeout": 0
-            }
-
-            var packet = new Buffer.alloc(16).fill(0);
-            packet[0] = parseInt((16+commandPacket.length)/256 | 0x88);
-            packet[1] = parseInt((16+commandPacket.length)%256);
-            packet[2] = sessionId[0];
-            packet[3] = sessionId[1];
-            packet.writeInt16BE(message.packetId, 10);
-            packet[10] = parseInt(message.packetId/256);
-            packet[11] = parseInt(message.packetId%256);
-            packet[12] = parseInt((4+commandPacket.length)/256);
-            packet[13] = parseInt((4+commandPacket.length)%256);
-            message.packet = new Buffer.concat([packet, commandPacket]);
-            return message;
-        }
-
-        //Send out all commands in the send buffer
-        function processSendBuffer() {
-            //Limit the send buffer to 5 commands
-            if(sendBuffer.length > 5) {
-                sendBuffer.splice(0, sendBuffer.length - 5);
-            }
-
-            if(sendBuffer.length > 0) {
-                localPacketId++;
-                try{server.send(sendBuffer[sendBuffer.length - 1].packet, port, ipAddress);}
-                catch(e){node.error("Attempted to send a message but the server was closed: " + e); success = false; sendBuffer = [];}
-                node.sendStatus("yellow", "Sending...");
-                sendBuffer.splice(sendBuffer.length - 1, 1);
-            }
-            // if(sendBuffer.length > 0 && inProcessingIncoming == false) {
-            //     if(sendBuffer[0].timeout <= 0) {
-            //         if(sendBuffer[0].attempts == 2) {
-            //             //Failed
-            //             sendBuffer.splice(0, 1);
-            //             // node.sendStatus("red", "Failed to Send: Timeout");
-            //             // timeoutCount++;
-            //             // if(timeoutCount > 5) {
-            //             //     //We have had several timeout issues we must be disconnected
-            //             //     console.log("TIMEOUT");
-            //             //     statusCallback("disconnected", "timeout");
-            //             // }
-            //         }
-            //         else {
-            //             var success = true;
-            //             localPacketId++;
-            //             try{server.send(sendBuffer[0].packet, port, ipAddress);}
-            //             catch(e){node.error("Attempted to send a message but the server was closed: " + e); success = false;}
-    
-            //             if(success) {
-            //                 //Sent
-            //                 sendBuffer[0].attempts = 2;
-            //                 sendBuffer[0].timeout = 10;
-            //                 node.sendStatus("yellow", "Sending...");
-            //             }
-            //         }
-            //     }
-            //     else {sendBuffer[0].timeout -= 1;}
-            //}
-        }
-
-        //Attempt connection to the HDL controller
-        function connect(ipAddress, port) {
-            //If already open, close before reconnecting
-            try{server.close();}catch(error){}
-            sendBuffer = [];
-            receiveBuffer = [];
-            sessionId = undefined;
-            localPacketId = 1;
-
-            server = udp.createSocket('udp4');
-            server.on('error', function(err) {
-                node.error("An Error Occured: " + err);
-                node.sendStatus("red", "Internal Error", err);
-            });
-
-            //Attempt handshake
-            server.bind(port);
-            setTimeout(function(){handshake();}, 5000);
-        }
-
-        //Send a message to the subscribed nodes (appears on the flow)
-        node.sendStatus = function(colour, message, extraInformation = "") {
-            for(var i = 0; i < statusCallbacks.length; i++) {
-                statusCallbacks[i](colour, message, extraInformation);
-            }
-        }
-
-        //Send a message to the subscribed nodes (appears on the flow)
-        node.sendMessage = function(message) {
-            for(var i = 0; i < messageCallbacks.length; i++) {
-                messageCallbacks[i](message);
+            else {
+                node.sendStatus("red", "Not Connected!");
             }
         }
         
-        node.addStatusCallback = function(func) {statusCallbacks.push(func);}
-        node.addMessageCallback = function(func) {messageCallbacks.push(func);}
 
-        //Now lets connect!
-        connect(ipAddress, port);
-
-
-        //When a status is received
-        function statusCallback(state, information) {
-            switch(state) {
-                case "connected": {
-                    node.sendStatus("green", "Connected!");
-                    node.log("Connected to ATEM @ " + ipAddress);
-                    var command = {
-                        "topic": "status",
-                        "payload": {
-                            "type": "status",
-                            "connectionStatus": "connected"
-                        }
-                    }
-                    messageCallback(command);
-
-                    //Send out the inital values
-                    var cmds = [];
-                    for(var key in commands.list) {
-                        var cmd = {
-                            "topic": "initial",
-                            "payload": commands.list[key].afterInit(commands)
-                        }
-                        if(cmd.payload != false) {
-                            cmds.push(cmd);
-                        }
-                    }
-
-                    messageCallback(cmds);
-                    break;
-                }
-                case "got-data": {
-                    node.sendStatus("green", "Got Data!");
-                    break;
-                }
-                case "error": {
-                    node.sendStatus("orange", "ATEM Error");
-                    var command = {
-                        "topic": "status",
-                        "payload": {
-                            "type": "status",
-                            "connectionStatus": "error",
-                            "errorInformation": information
-                        }
-                    }
-                    messageCallback(command);
-                    break;
-                }
-                case "connecting": {
-                    node.sendStatus("orange", "Connecting...");
-                    node.log("Connecting to ATEM @ " + ipAddress);
-                    node.information.status = "connecting";
-                    var command = {
-                        "topic": "status",
-                        "payload": {
-                            "type": "status",
-                            "connectionStatus": "connecting"
-                        }
-                    }
-                    messageCallback(command);
-        
-                    break;
-                }
-                case "disconnected": {
-                    if(node.information.status !== "disconnected") {
-                        node.sendStatus("red", "Disconnected!");
-                        node.error("Disconnected from ATEM @ " + ipAddress);
-                        node.information.status = "disconnected";
-                        clearInterval(pingCheck);
-                        node.information.connectionTimeout = 0;
-                        commands.close();
-                        var command = {
-                            "topic": "status",
-                            "payload": {
-                                "type": "status",
-                                "connectionStatus": "disconnected"
-                            }
-                        }
-                        messageCallback(command);
-
-                        //Close server and attempt reconnection
-                        connect(ipAddress, port);
-                    }
-                    break;
-                }
-            }
-        }
-
-        //When a message is received and processed send it out the output
-        function messageCallback(command) {
-            node.sendMessage(command);
-        }
-
-        //Completes a handshake with the atem and returns the session information
-        function handshake() {
-            var id = Math.round(Math.random() * 0x7FF);
-            statusCallback("connecting", "");
-
-            handshakeInterval = setInterval(function() {
-                node.sendStatus("yellow", "Attempting Handshake");
-                node.log("Attempting Handshake");
-                try{server.send(commands.packets.requestHandshake, port, ipAddress);}
-                catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
-            }, 5000);
-
-            //Check for connection state
-            pingCheck = setInterval(function() {
-                node.information.connectionTimeout++;
-                if(node.information.connectionTimeout > 10) {
-                    //Lost connection
-                    statusCallback("disconnected", "timeout");
-                    clearInterval(pingCheck);
-                    node.information.connectionTimeout = 0;
-                }
-            }, 5000);
-
-            //On message
-            server.on("message", function(message, rinfo) {
-                processIncomingMessage(message, rinfo);
-                clearInterval(handshakeInterval);
-            });
-        }
-
+        //Process the commands that were stored
         function processReceiveBuffer() {
-            for(var k = 0;  k <  receiveBuffer.length; k++) {
+            for(var k = 0;  k < receiveBuffer.length; k++) {
                 var message = receiveBuffer[k];
                 var flag = message[0] >> 3;
                 var length = ((message[0] & 0x07) << 8) | message[1];
@@ -397,120 +315,156 @@ module.exports = function(RED)
                     var name =  cmds[i].toString("UTF8", 4, 8);
                     command.payload.raw.length = length;
                     command.payload.raw.name = name;
-                    command.payload.raw.packet = cmds[i];
+                    command.payload.raw.packet = cmds[i]
 
-                    // //Answerback flag check for the command that this is a answerback for
-                    if(sendBuffer.length > 0) {
-                        if(name == commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) ||  commands.findInvertedDirectionName(sendBuffer[0].commandPacket.toString("UTF8", 0, 4)) == "") {
-                            //Respose
-                            sendBuffer.splice(0, 1);
-                            node.sendStatus("green", "Sent!");
-                            timeoutCount = 0;
-                        }
-                    }
-
-                    //Check for inital conditions and load in the information otherwise sync
-                    //Flag 1 >> 5 >> 1 (Done)
-                    if(node.information.status !== "connected") {
-                        //Check if the command exists in the supported list and pass its inital information
-                        var cmd = commands.findCommand(name);
-                        if(cmd != null) {
-                            cmd.initializeData(cmds[i].slice(8, length), flag, commands, messageCallbacks);
-                        }
-                    }
-                    else {
-                        //Check if the command exists in the supported list
-                        var cmd = commands.findCommand(name);
-                        if(cmd != null) {
-                            if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
-                                messageCallback(command);
-                                statusCallback("got-data", "");
+                    switch(connectionState) {
+                        case commands.connectionStates.initializing: {
+                            var cmd = commands.findCommand(name);
+                            if(cmd != null) {
+                                cmd.initializeData(cmds[i].slice(8, length), flag, commands, messageCallbacks);
                             }
+                            break;
                         }
-                        else {
-                            command.payload.cmd = "raw";
-                            messageCallback(command);
-                            statusCallback("got-data", "");
-                        }
+                        case commands.connectionStates.connected: {
+                            //Check if the command exists in the supported list
+                            var cmd = commands.findCommand(name);
+                            if(cmd != null) {
+                                if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
+                                    messageCallback(command);
+                                }
+                            }
+                            else {
+                                //Otherwise return raw
+                                command.payload.cmd = "raw";
+                                messageCallback(command);
+                            }
+                            break;
+                        }          
                     }
                 }
 
-                node.information.connectionTimeout = 0;
                 receiveBuffer.splice(k, 1);
             }
         }
 
-        //Process the message sent by the ATEM                                                        
-        function processIncomingMessage(message, rinfo) {
-            
-            //Reply if it's our message
+        //Process receive buffer
+        receiveInterval = setInterval(function() {
+            processReceiveBuffer();
+        }, 1);
+        sendInterval = setInterval(function() {
+            if(sendBuffer[0] !== undefined && sendBuffer[0] !== null && connectionState == commands.connectionStates.connected) {
+                //Send the message and clear it from the buffer
+                sendMessage(sendBuffer[0]);
+                sendBuffer.splice(0, 1);
+            }
+        }, 1);
+
+        //Generates a packet. Expects a commandPacket containing the command from the name >>
+        function generatePacket(commandPacket) {
+            var packet = new Buffer.alloc(16).fill(0);
+            packet[0] = parseInt((16+commandPacket.length)/256 | 0x88);
+            packet[1] = parseInt((16+commandPacket.length)%256);
+            packet[2] = sessionId[0];
+            packet[3] = sessionId[1];
+            packet.writeInt16BE(localPacketId, 10);
+            localPacketId++;
+            if(localPacketId > 65535) {localPacketId = 1;} //Assuming when we overflow we go back to packet id 1
+            packet[12] = parseInt((4+commandPacket.length)/256);
+            packet[13] = parseInt((4+commandPacket.length)%256);
+            return new Buffer.concat([packet, commandPacket]);
+        }
+
+        //Connect
+        var connect = function() {
+            //Generate random session id and update redefined commands with this id
+            var randomId = Math.floor((Math.random() * 32767) + 1);
+            var sessionId = new Buffer.alloc(2);
+            sessionId.writeInt16BE(randomId, 0);
+            commands.packets.disconnect[2] = sessionId[0];
+            commands.packets.disconnect[3] = sessionId[1];
+            commands.packets.requestHandshake[2] = sessionId[0];
+            commands.packets.requestHandshake[3] = sessionId[1];
+            commands.packets.handshakeAnswerback[2] = sessionId[0];
+            commands.packets.handshakeAnswerback[3] = sessionId[1];
+            commands.packets.handshakeAccepted[2] = sessionId[0];
+            commands.packets.handshakeAccepted[3] = sessionId[1];
+
+            clearInterval(heartBeatInterval);
+            server = udp.createSocket('udp4');
+            server.bind(port);
+            sendMessage(commands.packets.disconnect);
+            connectionAttempts++;
+            node.sendStatus("yellow", "Connecting");
+            server.once("message", function(message, rinfo) {
+                var connectionFlag = message[12];
+                if(connectionFlag == commands.flags.connect) {
+                    if(Buffer.compare(message.slice(0, 12), commands.packets.handshakeAccepted) === 0) {
+                        sendMessage(commands.packets.handshakeAnswerback);
+                        updateConnectionState(commands.connectionStates.initializing); 
+                        node.sendStatus("yellow", "Gathering Information");
+                        server.on("message", handleIncoming);
+                    }
+                }
+                else if(connectionFlag == commands.flags.full) {updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: The ATEM reported that it's full");}
+                else {
+                    updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: Misunderstood connection state: " + connectionFlag);
+                }
+            });
+            sendMessage(commands.packets.requestHandshake);
+            updateConnectionState(commands.connectionStates.connecting);
+            setTimeout(function() {
+                if(connectionState == commands.connectionStates.connecting) {
+                    updateConnectionState(commands.connectionStates.disconnected);
+                    sendError("Failed to connect", "Could not connect to the ATEM: Timeout");
+                }
+            }, 2000);
+        }
+        connect();
+
+        //Handle the incoming messages from the ATEM
+        var handleIncoming = function(message, rinfo) {
             var length = ((message[0] & 0x07) << 8) | message[1];
             if(length == rinfo.size) {
                 var flag = message[0] >> 3;
                 var messageSessionId = [message[2], message[3]];
                 var remotePacketId = [message[10], message[11]];
+                messageTime = 0;
 
-                //Check for disconnection
-                clearInterval(timeoutInterval);
-                timeoutInterval = setInterval(function() {
-                    statusCallback("disconnected", "timeout");
-                    clearInterval(timeoutInterval);
-                }, 2000);
-
-                //Inital connection
-                if(sessionId === undefined) {
-                    if(flag == commands.flags.connect) {
-                        //Send handshake answerback
-                        try{server.send(commands.packets.handshakeAnswerback, port, ipAddress);}
-                        catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
-                    }
-                    else if(flag == commands.flags.sync) {
-                        sessionId = messageSessionId;
-                    }
-                    else {
-                        node.error("Unknown connection state: " + flag);
-                        statusCallback("disconnected", "Unknown Connection State");
-                    }
-                    return;
+                //Set the sessionId
+                if(sessionId === null) {
+                    sessionId = messageSessionId;
                 }
 
-                if(sessionId[0] != messageSessionId[0] || sessionId[1] != messageSessionId[1]) {}
-                else {
-                    //Reply to each command
-                    var buffer = new Buffer.alloc(12).fill(0);
-                    buffer[0] = 0x80;
-                    buffer[1] = 0x0C;
-                    buffer[2] = sessionId[0];
-                    buffer[3] = sessionId[1];
-                    buffer[4] = remotePacketId[0];
-                    buffer[5] = remotePacketId[1];
-                    buffer[9] = 0x41;
-
-                    setTimeout(function(){
-                        try{server.send(buffer, port, ipAddress);}
-                        catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
-                    }, 100);
-
-                    //Check if we're connected
-                    if(node.information.status != "connected") {
-                        if(flag == commands.flags.initializing && node.information.status == "connecting") {
-                            node.information.status = "initializing"; 
-                            statusCallback(node.information.status, "");
-                        }
-                        if(message.toString("UTF8", 16, 20) === "Time" && flag == commands.flags.sync && node.information.status == "initializing") {
-                            node.information.status = "connected"; 
-                            setTimeout(function() {
-                                statusCallback(node.information.status, "");
-                            }, 2000);
-                        }
+                //Switch the command flag sent from the ATEM
+                switch(flag) {
+                    case commands.flags.heartbeat: {
+                        updateConnectionState(commands.connectionStates.connected);
                     }
                 }
 
-                receiveBuffer.push(message);
+                //Reply to each command
+                var buffer = new Buffer.alloc(12).fill(0);
+                buffer[0] = 0x80;
+                buffer[1] = 0x0C;
+                buffer[2] = sessionId[0];
+                buffer[3] = sessionId[1];
+                buffer[4] = remotePacketId[0];
+                buffer[5] = remotePacketId[1];
+                buffer[9] = 0x41;
+                sendMessage(buffer);
+
+                //Switch based on our connection state
+                switch(connectionState) {
+                    case commands.connectionStates.initializing: 
+                    case commands.connectionStates.connected: {
+                        receiveBuffer.push(message);
+                        break;
+                    }
+                }
             }
         }
     }
-
+    
     //Add the node
     RED.nodes.registerType("atem-network", ATEMNetwork);
 }

@@ -6,11 +6,7 @@ Provides control and feedback from a Blackmagic ATEM device
 Please report any bugs that you may find. We will be using this in a automation system however won't be using all the functionality so tell me if you find any issues :) Below is some known issues.
 
 - Check if the output type works correctly [Minor]
-- Unknown connection state (flag) 0x06 [Minor]. This may be a "atem full" error
-- Sometimes the connection is not successful (This may be a timeout issue) [Minor]
 - Downstream keyer auto seems to be a bit slow [Minor]
-- Currently detection of disconnection is not working [Major]
-- Transition position is causing disconnects [Major]
 
 ## Supported commands
 - Aux Source
@@ -26,6 +22,7 @@ Please report any bugs that you may find. We will be using this in a automation 
 - Transition Position
 - Version
 - Raw Commands
+- Transition Mix
 - Tallying on the MEs and Keyers
 
 Thanks to SKAARHOJ for the research into the commands! This is also where you can find a detail listing if you wish to use the raw command feature
