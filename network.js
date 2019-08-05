@@ -9,7 +9,7 @@ module.exports = function(RED)
     {
         RED.nodes.createNode(this, config);
         var node = this;
-        var name = config.name;
+       // var name = config.name;
         var ipAddress = config.ipAddress;
         var port = 9910;
         var server = null;
@@ -17,7 +17,7 @@ module.exports = function(RED)
         var localPacketId = 1;
         var heartBeatInterval = undefined;
         var receiveInterval = undefined;
-        var sendInterval = undefined;
+        //var sendInterval = undefined;
         var messageTime = 0;
         var connectionAttempts = 0;
         var lastSentError = "";
@@ -36,78 +36,6 @@ module.exports = function(RED)
             lastSentError = "";
             localPacketId = 1;
         });
-
-        // //Process the message sent by the ATEM                                                        
-        // function processIncomingMessage(message, rinfo) {
-    
-        // //Reply if it's our message
-        // var length = ((message[0] & 0x07) << 8) | message[1];
-        // if(length == rinfo.size) {
-        //     var flag = message[0] >> 3;
-        //     var messageSessionId = [message[2], message[3]];
-        //     var remotePacketId = [message[10], message[11]];
-
-        //     //Check for disconnection
-        //     clearInterval(timeoutInterval);
-        //     timeoutInterval = setInterval(function() {
-        //         statusCallback("disconnected", "timeout");
-        //         clearInterval(timeoutInterval);
-        //     }, 2000);
-
-        //     //Inital connection
-        //     if(sessionId === undefined) {
-        //         if(flag == commands.flags.connect) {
-        //             //Send handshake answerback
-        //             try{server.send(commands.packets.handshakeAnswerback, port, ipAddress);}
-        //             catch(e){node.error("Attempted to send a message but the server was closed: " + e); return;}
-        //         }
-        //         else if(flag == commands.flags.sync) {
-        //             sessionId = messageSessionId;
-        //         }
-        //         else {
-        //             node.error("Unknown connection state: " + flag);
-        //             statusCallback("disconnected", "Unknown Connection State");
-        //         }
-        //         return;
-        //     }
-
-        //     if(sessionId[0] != messageSessionId[0] || sessionId[1] != messageSessionId[1]) {}
-        //     else {
-        //         //Reply to each command
-        //         var buffer = new Buffer.alloc(12).fill(0);
-        //         buffer[0] = 0x80;
-        //         buffer[1] = 0x0C;
-        //         buffer[2] = sessionId[0];
-        //         buffer[3] = sessionId[1];
-        //         buffer[4] = remotePacketId[0];
-        //         buffer[5] = remotePacketId[1];
-        //         buffer[9] = 0x41;
-
-        //         sendMessage(buffer);
-
-        //         // setTimeout(function(){
-        //         //     try{server.send(buffer, port, ipAddress);}
-        //         //     catch(e) {node.error("Attempted to send a message but the server was closed: " + e); return;}
-        //         // }, 100);
-
-        //         // //Check if we're connected
-        //         // if(node.information.status != "connected") {
-        //         //     if(flag == commands.flags.initializing && node.information.status == "connecting") {
-        //         //         node.information.status = "initializing"; 
-        //         //         statusCallback(node.information.status, "");
-        //         //     }
-        //         //     if(message.toString("UTF8", 16, 20) === "Time" && flag == commands.flags.sync && node.information.status == "initializing") {
-        //         //         node.information.status = "connected"; 
-        //         //         setTimeout(function() {
-        //         //             statusCallback(node.information.status, "");
-        //         //         }, 2000);
-        //         //     }
-        //         // }
-        //     }
-
-        //     receiveBuffer.push(message);
-        // }
-        // }
 
         //Send out a error
         function sendError(errorNode, errorMessage) {
