@@ -325,9 +325,10 @@ module.exports = function(RED)
             connectionAttempts++;
             node.sendStatus("yellow", "Connecting");
             server.once("message", function(message, rinfo) {
+                console.log(message);
                 var connectionFlag = message[12];
                 if(connectionFlag == commands.flags.connect) {
-                    if(Buffer.compare(message.slice(0, 12), commands.packets.handshakeAccepted) === 0) {
+                    if(Buffer.compare(message.slice(0, 4), commands.packets.handshakeAccepted) === 0) {
                         sendMessage(commands.packets.handshakeAnswerback);
                         updateConnectionState(commands.connectionStates.initializing); 
                         node.sendStatus("yellow", "Gathering Information");
