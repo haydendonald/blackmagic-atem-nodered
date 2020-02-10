@@ -82,7 +82,7 @@ var msg = {
         "cmd": "programInput",
         "data": {
             "ME": 0,
-            "videoSouce": {
+            "videoSource": {
                 id: 0,
                 shortName: "blk",
                 longName: "black" //(Only one of the above is requred)

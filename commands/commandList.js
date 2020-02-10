@@ -148,7 +148,7 @@ module.exports = {
       warning: require("./warning.js"),
       topology: require("./topology.js"),
       macroProperties: require("./macroProperties.js"),
-      transitionMix: require("./transitionMix.js")
+      transitionMix: require("./transitionMix.js"),
       //cameraControl: require("./cameraControl.js")
       //superSource: require("./superSource.js")
   },

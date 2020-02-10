@@ -51,7 +51,7 @@ module.exports = {
     var adjustmentDomain = data[1];
     var feature = data[2];
 
-    console.log(adjustmentDomain + ":" + feature);
+    //console.log(adjustmentDomain + ":" + feature);
 
 
     switch(adjustmentDomain) {
@@ -152,7 +152,7 @@ module.exports = {
 
 
 
-    //console.log(this.data[1]);
+    console.log(this.data[1]);
 
 
 

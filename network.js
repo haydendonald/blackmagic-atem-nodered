@@ -325,7 +325,6 @@ module.exports = function(RED)
             connectionAttempts++;
             node.sendStatus("yellow", "Connecting");
             server.once("message", function(message, rinfo) {
-                console.log(message);
                 var connectionFlag = message[12];
                 if(connectionFlag == commands.flags.connect) {
                     if(Buffer.compare(message.slice(0, 4), commands.packets.handshakeAccepted) === 0) {
