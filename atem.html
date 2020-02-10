@@ -13,8 +13,9 @@
         <label for="node-input-outputMode"><i class="icon-tag"></i> Output Mode:</label>
         <select id="node-input-outputMode">
             <option value=""></option>
-            <option value="reply">Only output reply</option>
+            <!-- <option value="reply">Only output reply</option> -->
             <option value="status">Output only status updates</option>
+            <option value="supported">Output supported commands only</option>
             <option value="all">Output everything</option>
         </select>
     </div>
@@ -44,7 +45,7 @@
         defaults: {
             name: {value: ""},
             network: {value: "", required: true, type: "atem-network"},
-            outputMode: {value: "status", required: true},
+            outputMode: {value: "supported", required: true},
             sendInitialData: {value: "yes", required: true},
             sendStatusUpdates: {value: "yes", required: true}
         },

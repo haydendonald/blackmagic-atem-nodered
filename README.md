@@ -2,12 +2,6 @@
 Provides control and feedback from a Blackmagic ATEM device
 [Blackmagic](https://www.blackmagicdesign.com)
 
-## Currently in testing
-Please report any bugs that you may find. We will be using this in a automation system however won't be using all the functionality so tell me if you find any issues :) Below is some known issues.
-
-- Check if the output type works correctly [Minor]
-- Downstream keyer auto seems to be a bit slow [Minor]
-
 ## Supported commands
 - Aux Source
 - Downstream Keyer

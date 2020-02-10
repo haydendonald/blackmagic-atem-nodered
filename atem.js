@@ -44,7 +44,7 @@ module.exports = function(RED)
               else if(message.topic == "command"){
                 //Messages
                 switch(outputMode) {
-                  case "reply": {
+                  case "reply": { //This does not appear to be working and has been disabled
                     if(message.payload.type == "stateChanged" && msg.sender == this) {
                       node.send(message);
                     }
@@ -52,6 +52,12 @@ module.exports = function(RED)
                   }
                   case "status": {
                     if(message.payload.type == "stateChanged") {
+                      node.send(message);
+                    }
+                    break;
+                  }
+                  case "supported": {
+                    if(message.payload.cmd !== "raw") {
                       node.send(message);
                     }
                     break;
