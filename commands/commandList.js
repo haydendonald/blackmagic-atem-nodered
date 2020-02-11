@@ -179,5 +179,8 @@ module.exports = {
     for(var key in this.list) {
       this.list[key].close();
     }
+  },
+  isValid(variable) {
+    return variable !== undefined && variable !== null;
   }
 }

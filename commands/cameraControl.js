@@ -161,7 +161,7 @@ module.exports = {
 
     command.payload.cmd = this.cmd;
     command.payload.data = this.data;
-    
+
     return true;
   },
   sendData(command, commandList) {
@@ -182,10 +182,78 @@ module.exports = {
       return msg;
     }
     else {
-      var packet = Buffer.alloc(24).fill(0);
+      var packets = [];
+
+      if(!commandList.exists(command.payload.data.cameraId)){error = "Camera ID is missing";}
+      else {
+        //Loop though the adjustment domains and generate the packets
+        for(var domain in commandList.cameraOptions.adjustmentDomain) {
+          switch(domain) {
+            case "lens": {
+              for(var subDomain in commandList.cameraOptions.lensFeature) {
+                var tempPacket = new Buffer.alloc(24).fill(0);
+                tempPacket[0] = parseInt(command.payload.data.cameraId);
+                tempPacket[1] = commandList.cameraOptions.adjustmentDomain[domain];
+                tempPacket[2] = commandList.cameraOptions.lensFeature[subDomain];
+                if(command.payload.data.isRelative === undefined || command.payload.data.isRelative === null) {tempPacket[3] = 1;}else{tempPacket[3] = command.payload.data.isRelative ? 1:0;}
+
+                switch(subDomain) {
+                  case "focus": {
+                    if(commandList.isValid(command.payload.data.focus)) {
+                      if(command.payload.data.focus !== "auto") {
+                        tempPacket.writeUInt16BE(parseFloat(command.payload.data.focus) * 655.35, 16);
+                        packets.push(tempPacket);
+                      }
+                    }
+                    else if(this.data[tempPacket[0]].focus !== "auto") {
+                      tempPacket.writeUInt16BE(this.data[tempPacket[0]].focus * 655.35, 16);
+                      packets.push(tempPacket);
+                    }
+                    break;
+                  }
+                  case "autoFocused": {
+                    if(commandList.isValid(command.payload.data.focus)) {
+                      if(command.payload.data.focus === "auto") {
+                        packets.push(tempPacket);
+                      }
+                    }
+                    break;
+                  }
+                  case "iris": {
+
+                    break;
+                  }
+                  case "zoom": {
+                    break;
+                  }
+                }
+              }
+
+
+
+
+
+              break;
+            }
+            case "camera": {
+              break;
+            }
+            case "chip": {
+              break;
+            }
+          }
+        }
+      }
+
+
+
+
+
+
+
 
       if(error != null) {
-        //Error occured
+        //An error occured
         var msg = {
           "direction": "node",
           "command": {
@@ -195,13 +263,33 @@ module.exports = {
             }
           }
         }
+
+        return msg;
       }
       else {
-        //Success
-        msg.direction = "server";
-        msg.command.packet = packet;
+        //Generate the payloads
+        var msgs = [];           
+        for(var packet in packets) {
+          var msg = {
+            "direction": "node",
+            "name": this.set,
+            "command": {
+              "payload": {
+                "cmd": this.cmd,
+                "data": "The data was not filled"
+              }
+            }
+          }
+
+          msg.direction = "server";
+          msg.command.packet = packets[packet];
+
+          msgs.push(msg);
+        }
+
+        console.log(msgs);
+        return [msgs];
       }
-      return msg;
     }
   },
   //What todo once we are connected
