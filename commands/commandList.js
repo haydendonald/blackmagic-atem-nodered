@@ -89,18 +89,6 @@ module.exports = {
   },
 
   packets: {
-      // requestHandshake: new Buffer([
-      //   0x10, 0x14, 0x53, 0xAB,
-      //   0x00, 0x00, 0x00, 0x00,
-      //   0x00, 0x3A, 0x00, 0x00,
-      //   0x01, 0x00, 0x00, 0x00,
-      //   0x00, 0x00, 0x00, 0x00
-      // ]),
-      // handshakeAnswerback: new Buffer([
-      //   0x80, 0x0C, 0x53, 0xAB,
-      //   0x00, 0x00, 0x00, 0x00,
-      //   0x00, 0x03, 0x00, 0x00
-      // ])
       requestHandshake: new Buffer([
         0x10, 0x14, 0x00, 0x00, //The two last bits need to be a random id
         0x00, 0x00, 0x00, 0x00,
@@ -149,6 +137,7 @@ module.exports = {
       topology: require("./topology.js"),
       macroProperties: require("./macroProperties.js"),
       transitionMix: require("./transitionMix.js"),
+      superSourceBox: require("./superSourceBox.js")
       //cameraControl: require("./cameraControl.js")
       //superSource: require("./superSource.js")
   },

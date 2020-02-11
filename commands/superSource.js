@@ -41,6 +41,8 @@ module.exports = {
     command.payload.cmd = this.cmd;
     command.payload.data = this.data;
 
+    console.log(this.data);
+
     return true;
   },
   sendData(command, commandList) {
