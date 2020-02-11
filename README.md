@@ -22,9 +22,6 @@ Provides control and feedback from a Blackmagic ATEM device
 - Transition Mix
 - Tallying on the MEs and Keyers
 
-## Version History
-
-
 
 Thanks to SKAARHOJ for the research into the commands! This is also where you can find a detail listing if you wish to use the raw command feature
 [SKAARHOJ BMD Protocol](https://www.skaarhoj.com/fileadmin/BMDPROTOCOL.html)

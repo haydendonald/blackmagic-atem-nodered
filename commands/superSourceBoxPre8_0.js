@@ -1,4 +1,3 @@
-//Not complete
 module.exports = {
   get: "SSBP",
   set: "CSBP",
@@ -12,30 +11,23 @@ module.exports = {
     this.processData(data, flag, command, commandList);
   },
   processData(data, flag, command, commandList) {
-    this.data[data[1] + 1] = {
-      "enabled": data[2] == true,
-      "inputNumber": data.readUInt16BE(4),
-      "videoSource": commandList.list.inputProperty.findInput(data.readUInt16BE(4)),
-      "xPosition": data.readInt16BE(6) / 100,
-      "yPosition": data.readInt16BE(8) / 100,
-      "size": data.readUInt16BE(10) / 1000,
-      "cropEnabled": data[12] == 1,
-      "cropTop": data.readUInt16BE(14) / 1000,
-      "cropBottom": data.readUInt16BE(16) / 1000,
-      "cropLeft": data.readUInt16BE(18) / 1000,
-      "cropRight": data.readUInt16BE(20) / 1000,
-      // "setMask?": {
-      //   "enabled": data.readUInt16BE(22).toString(2)[0] == "1",
-      //   "inputSource": data.readUInt16BE(22).toString(2)[1] == "1",
-      //   "xPosition": data.readUInt16BE(22).toString(2)[2] == "1",
-      //   "yPosition": data.readUInt16BE(22).toString(2)[3] == "1",
-      //   "size": data.readUInt16BE(22).toString(2)[4] == "1",
-      //   "cropped": data.readUInt16BE(22).toString(2)[5] == "1",
-      //   "cropTop": data.readUInt16BE(22).toString(2)[6] == "1",
-      //   "cropBottom": data.readUInt16BE(22).toString(2)[7] == "1",
-      //   "cropLeft": data.readUInt16BE(22).toString(2)[8] == "1",
-      //   "cropRight": data.readUInt16BE(22).toString(2)[9] == "1"
-      // }
+    if(this.data[data[0]] === undefined || this.data[data[0]] === null){this.data[data[0]] = {};}
+
+    //This file works pre version 8.0
+    if(commandList.list.version.getVersion() >= commandList.version.V8_0){return false;}
+
+    this.data[0][data[0] + 1] = {
+      "enabled": data[1] == true,
+      "inputNumber": data.readUInt16BE(2),
+      "videoSource": commandList.list.inputProperty.findInput(data.readUInt16BE(2)),
+      "xPosition": data.readInt16BE(4) / 100,
+      "yPosition": data.readInt16BE(6) / 100,
+      "size": data.readUInt16BE(8) / 1000,
+      "cropEnabled": data[10] == 1,
+      "cropTop": data.readUInt16BE(12) / 1000,
+      "cropBottom": data.readUInt16BE(14) / 1000,
+      "cropLeft": data.readUInt16BE(16) / 1000,
+      "cropRight": data.readUInt16BE(18) / 1000
     };
 
     command.payload.cmd = this.cmd;
@@ -61,7 +53,7 @@ module.exports = {
       return msg;
     }
     else {
-      var packet = Buffer.alloc(23).fill(0);
+      var packet = Buffer.alloc(24).fill(0);
 
       //SetMask 0-1 not sure what it does so just setting it to 0 unless told otherwise
       if(commandList.exists(command.payload.data.setMask)) {
@@ -173,10 +165,6 @@ module.exports = {
         }
       }
       
-
-      console.log(packet);
-
-
       if(error != null) {
         //Error occured
         var msg = {

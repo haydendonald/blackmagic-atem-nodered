@@ -10,6 +10,9 @@ module.exports = {
     error: 0x08,
     ack: 0x16
   },
+  version: {
+    V8_0: 2.28
+  },
   transitionStyles: {
     mix: 0x00,
     dip: 0x01,
@@ -137,7 +140,8 @@ module.exports = {
       topology: require("./topology.js"),
       macroProperties: require("./macroProperties.js"),
       transitionMix: require("./transitionMix.js"),
-      superSourceBox: require("./superSourceBox.js")
+      superSourceBox: require("./superSourceBoxPre8_0.js"),
+      superSourceBox: require("./superSourceBox8_0.js")
       //cameraControl: require("./cameraControl.js")
       //superSource: require("./superSource.js")
   },

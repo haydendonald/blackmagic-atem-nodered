@@ -12,6 +12,7 @@ module.exports = {
   },
   processData(data, flag, command, commandList) {
     command.payload.cmd = this.cmd;
+    console.log(data);
     command.payload.data.version = data.readUInt16BE(0) + "." + data.readUInt16BE(2);
     this.data.version = command.payload.data.version;
     if(flag != commandList.flags.sync){return false;}
@@ -36,5 +37,8 @@ module.exports = {
       "cmd": this.cmd,
       "data": this.data
     }
+  },
+  getVersion() {
+    return this.data.version;
   }
 }
