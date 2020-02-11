@@ -44,25 +44,25 @@ module.exports = {
       zoom: 0x09
     },
     cameraFeature: {
+      lowerGain: 0x0D,
       gain: 0x01,
       whiteBalance: 0x02,
       shutter: 0x05,
+      lowerGainValues: {
+        "-12": 62475,
+        "-6": 64011,
+      },
       gainValues: {
-        "+0db": 760,
-        "+6db": 1272,
-        "+12db": 2296,
-        "+18db": 4344,
-        "+24db": 8440,
+        "0": 719,
+        "6": 1231,
+        "12": 2255,
+        "18": 4303,
+        "24": 8399,
       },
-      whiteBalance: {
-        "3200K": 3200,
-        "4500K": 4500,
-        "5000K": 5000,
-        "5600K": 5600,
-        "6500K": 6500,
-        "7500K": 7500
-      },
-      shutter: {
+      shutterValues: {
+        "1/24": 41667,
+        "1/25": 40000,
+        "1/30": 33333,
         "1/50": 20000,
         "1/60": 16667,
         "1/75": 13333,
@@ -87,7 +87,7 @@ module.exports = {
       aperture: 0x03,
       contrast: 0x04,
       lum: 0x05,
-      hueSaturation: 0x06
+      sat: 0x06
     }
   },
 
@@ -141,8 +141,8 @@ module.exports = {
       macroProperties: require("./macroProperties.js"),
       transitionMix: require("./transitionMix.js"),
       superSourceBox: require("./superSourceBoxPre8_0.js"),
-      superSourceBox: require("./superSourceBox8_0.js")
-      //cameraControl: require("./cameraControl.js")
+      superSourceBox: require("./superSourceBox8_0.js"),
+      cameraControl: require("./cameraControl.js")
       //superSource: require("./superSource.js")
   },
   //Return the get for set and set for get command name

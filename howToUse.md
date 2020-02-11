@@ -394,6 +394,25 @@ var msg = {
 }
 ```
 
+## Camera Control (Get/Set) [Development]
+Controls a camera
+- `cmd` "cameraControl"
+- `data` Array[cameraId]
+- `iris` The current iris value in percentage (0-100%)
+- `focus` The current focus value in percentage (0-100%)
+- `gain` The gain value of the camera (-12, -6, 0, +6, +12, 18, 24)db
+- `whiteBalance` The white balance of the camera
+- `zoomSpeed` The current zoom speed in percentage (-100% - 100%)
+- `lift[red,green,blue,yellow]` 
+- `gamma[red,green,blue,yellow]` 
+- `gain[red,green,blue,yellow]` 
+- `lumMix`
+- `hue`
+- `shutter`
+- `contrast`
+- `saturation`
+
+
 ## Version (Get)
 The current version of the ATEM
 ### cmd = "version"
