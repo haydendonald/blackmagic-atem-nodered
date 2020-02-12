@@ -179,7 +179,6 @@ module.exports = function(RED)
 
                         for(var i in success) {
                             var payload = success[i];
-                            console.log(payload);
                             switch(payload.direction) {
                                 //The data was stored and should just be returned
                                 case "node": {
