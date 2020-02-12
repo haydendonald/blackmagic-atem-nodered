@@ -375,7 +375,7 @@ var msg = {
 }
 ```
 
-### Example request to from the ATEM
+### Example request to the ATEM
 ```
 //Request to set the super source box on super source 1 box 4 to change input
 var msg = {
@@ -394,23 +394,109 @@ var msg = {
 }
 ```
 
-## Camera Control (Get/Set) [Development]
+## Camera Control (Get/Set)
 Controls a camera
 - `cmd` "cameraControl"
 - `data` Array[cameraId]
-- `iris` The current iris value in percentage (0-100%)
-- `focus` The current focus value in percentage (0-100%)
-- `gain works` The gain value of the camera (-12, -6, 0, +6, +12, 18, 24)db
-- `whiteBalance working` The white balance of the camera (Integer)
-- `zoomSpeed` The current zoom speed in percentage (-100% - 100%)
-- `lift[red,green,blue,yellow]` 
-- `gamma[red,green,blue,yellow]` 
-- `gain[red,green,blue,yellow]` 
-- `lumMix`
-- `hue`
-- `shutter working` The shutter speed ("1/24", "1/25", "1/30", "1/50", "1/60", "1/75", "1/90", "1/100", "1/120", "1/150", "1/180", "1/250", "1/360", "1/500", "1/725", "1/1000", "1/1450", "1/2000")
-- `contrast`
-- `saturation`
+- `iris` The current iris value in percentage (0-100%). Set value to `auto` for auto iris
+- `focus` The current focus value in percentage (0-100%). Set value to `auto` for auto focus
+- `gain` The gain value of the camera (-12, -6, 0, +6, +12, 18, 24)db
+- `whiteBalance` The white balance of the camera (Integer)
+- `zoomSpeed` The current zoom speed in percentage (-100% - 100%). Send 0% to stop
+- `zoomPosition` Move the zoom to a set position (0-100%)
+- `lift[red,green,blue,yellow]` Sets the lift value of the camera (-1.0 - 1.0)
+- `gamma[red,green,blue,yellow]` Sets the gamma value of the camera (-1.0 - 1.0)
+- `gain[red,green,blue,yellow]` Sets the gain value of the camera (0 - 4.0)
+- `lumMix` Sets the lum mix of the camera (0 - 100%)
+- `hue` Sets the hue of the camera (0 - 100%)
+- `shutter` The shutter speed ("1/24", "1/25", "1/30", "1/50", "1/60", "1/75", "1/90", "1/100", "1/120", "1/150", "1/180", "1/250", "1/360", "1/500", "1/725", "1/1000", "1/1450", "1/2000")
+- `contrast` Sets the contrast on the camera (0 - 100%)
+- `saturation` Sets the saturation of the camera (0 - 100%)
+
+### Example message from the ATEM
+```
+var msg = {
+    "payload": {
+        "cmd": "cameraControl",
+        "data": {
+            //Camera ID
+            1: {
+                "iris": 0,
+                "focus": 0,
+                "overallGain": "0db",
+                "whiteBalance": 5600,
+                "zoomSpeed": 0,
+                "lift": {
+                    "red": 0.0,
+                    "green": 0.0,
+                    "blue": 0.0,
+                    "yellow": 0.0
+                },
+                "gamma": {
+                    "red": 0.0,
+                    "green": 0.0,
+                    "blue": 0.0,
+                    "yellow": 0.0
+                },
+                "gain": {
+                    "red": 0.0,
+                    "green": 0.0,
+                    "blue": 0.0,
+                    "yellow": 0.0
+                },
+                "lumMix": 0,
+                "hue": 50,
+                "shutter": "1/75",
+                "contrast": 50,
+                "saturation": 0,
+                "zoomPosition" 0
+            },
+            2: {
+                ....
+            }
+        }
+    }
+}
+```
+
+### Example request to from the ATEM
+```
+//Request camera 1 to reset to defaults
+var msg = {
+    "payload": {
+        "cmd": "cameraControl",
+        "data": {
+            "cameraID": 1,
+                "iris": 0,
+                "overallGain": "6db",
+                "whiteBalance": 5700,
+                "lift": {
+                    "red": 0.0,
+                    "green": 0.0,
+                    "blue": 0.0,
+                    "yellow": 0.0
+                },
+                "gamma": {
+                    "red": 0.0,
+                    "green": 0.0,
+                    "blue": 0.0,
+                    "yellow": 0.0
+                },
+                "gain": {
+                    "red": 1.0,
+                    "green": 1.0,
+                    "blue": 1.0,
+                    "yellow": 1.0
+                },
+                "lumMix": 0,
+                "hue": 0,
+                "shutter": "1/50",
+                "contrast": 50,
+                "saturation": 50
+        }
+    }
+}
+```
 
 
 ## Version (Get)
