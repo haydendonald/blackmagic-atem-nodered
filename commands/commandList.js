@@ -40,7 +40,7 @@ module.exports = {
     lensFeature: {
       focus: 0x00,
       autoFocused: 0x01,
-      iris: 0x03,
+      iris: 0x02,
       autoIris:0x05,
       zoomPosition: 0x08,
       zoom: 0x09

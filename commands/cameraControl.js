@@ -47,7 +47,7 @@ module.exports = {
 
     //Expect a packet size of 24
     if(data.length != 24){return false;}
-
+    
     //Set values based off adjustment domain
     switch(data[1]) {
       case commandList.cameraOptions.adjustmentDomain.lens: {
@@ -61,7 +61,7 @@ module.exports = {
             break;
           }
           case commandList.cameraOptions.lensFeature.iris: {
-            this.data[data[0]].iris = (data.readUInt16BE(16) / 2048) * 100;
+            this.data[data[0]].iris = 100 - ((data.readUInt16BE(16) - 3072) / 15360) * 100;
             break;
           }
           case commandList.cameraOptions.lensFeature.autoIris: {
@@ -231,7 +231,7 @@ module.exports = {
                     if(commandList.isValid(command.payload.data.iris)) {
                       if(command.payload.data.iris !== "auto") {
                         commandList.cameraOptions.setParameter.iris.copy(tempPacket, 4);
-                        tempPacket.writeInt16BE(parseFloat(command.payload.data.iris) * 20.48, 16);
+                        tempPacket.writeInt16BE((parseFloat(100 - command.payload.data.iris) * 153.6) + 3072, 16);
                         packets.push(tempPacket);
                       }
                     }
