@@ -49,15 +49,22 @@ module.exports = {
       whiteBalance: 0x02,
       shutter: 0x05,
       lowerGainValues: {
-        "-12": 62475,
-        "-6": 64011,
+        "-12db": 0xF4B3,
+        "-6db": 0xFA00,
+        "0db": 0x0000,
+        "6db": 0x0600,
+        "12db": 0x0C00,
+        "18db": 0x1249,
+        "24db": 0x1800,
       },
       gainValues: {
-        "0": 719,
-        "6": 1231,
-        "12": 2255,
-        "18": 4303,
-        "24": 8399,
+        "-12db": 0x0000,
+        "-6db": 0x0000,
+        "0db": 0x02B3,
+        "6db": 0x0400,
+        "12db": 0x080C,
+        "18db": 01000,
+        "24db": 0x2000,
       },
       shutterValues: {
         "1/24": 41667,
@@ -88,6 +95,11 @@ module.exports = {
       contrast: 0x04,
       lum: 0x05,
       sat: 0x06
+    },
+    setParameter: {
+      shutter: new Buffer([0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01]),
+      whiteBalance: new Buffer([0x02, 0x00, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00]),
+      overallGain: new Buffer([0x01, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00])
     }
   },
 

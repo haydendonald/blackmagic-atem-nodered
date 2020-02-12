@@ -400,15 +400,15 @@ Controls a camera
 - `data` Array[cameraId]
 - `iris` The current iris value in percentage (0-100%)
 - `focus` The current focus value in percentage (0-100%)
-- `gain` The gain value of the camera (-12, -6, 0, +6, +12, 18, 24)db
-- `whiteBalance` The white balance of the camera
+- `gain works` The gain value of the camera (-12, -6, 0, +6, +12, 18, 24)db
+- `whiteBalance working` The white balance of the camera (Integer)
 - `zoomSpeed` The current zoom speed in percentage (-100% - 100%)
 - `lift[red,green,blue,yellow]` 
 - `gamma[red,green,blue,yellow]` 
 - `gain[red,green,blue,yellow]` 
 - `lumMix`
 - `hue`
-- `shutter`
+- `shutter working` The shutter speed ("1/24", "1/25", "1/30", "1/50", "1/60", "1/75", "1/90", "1/100", "1/120", "1/150", "1/180", "1/250", "1/360", "1/500", "1/725", "1/1000", "1/1450", "1/2000")
 - `contrast`
 - `saturation`
 

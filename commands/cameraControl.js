@@ -45,6 +45,9 @@ module.exports = {
       };
     }
 
+    //Expect a packet size of 24
+    if(data.length != 24){return false;}
+
     //Set values based off adjustment domain
     switch(data[1]) {
       case commandList.cameraOptions.adjustmentDomain.lens: {
@@ -195,47 +198,115 @@ module.exports = {
                 tempPacket[0] = parseInt(command.payload.data.cameraId);
                 tempPacket[1] = commandList.cameraOptions.adjustmentDomain[domain];
                 tempPacket[2] = commandList.cameraOptions.lensFeature[subDomain];
-                if(command.payload.data.isRelative === undefined || command.payload.data.isRelative === null) {tempPacket[3] = 1;}else{tempPacket[3] = command.payload.data.isRelative ? 1:0;}
+                if(command.payload.data.isRelative === undefined || command.payload.data.isRelative === null) {tempPacket[3] = 0;}else{tempPacket[3] = command.payload.data.isRelative ? 1:0;}
 
                 switch(subDomain) {
                   case "focus": {
                     if(commandList.isValid(command.payload.data.focus)) {
                       if(command.payload.data.focus !== "auto") {
                         tempPacket.writeUInt16BE(parseFloat(command.payload.data.focus) * 655.35, 16);
-                        packets.push(tempPacket);
+                        //packets.push(tempPacket);
                       }
                     }
                     else if(this.data[tempPacket[0]].focus !== "auto") {
                       tempPacket.writeUInt16BE(this.data[tempPacket[0]].focus * 655.35, 16);
-                      packets.push(tempPacket);
+                     // packets.push(tempPacket);
                     }
                     break;
                   }
                   case "autoFocused": {
                     if(commandList.isValid(command.payload.data.focus)) {
                       if(command.payload.data.focus === "auto") {
-                        packets.push(tempPacket);
+                        //packets.push(tempPacket);
                       }
                     }
                     break;
                   }
                   case "iris": {
-
+                    // if(commandList.isValid(command.payload.data.iris)) {
+                    //   tempPacket.writeUInt16BE(parseFloat(command.payload.data.focus) * 655.35, 16);
+                    //   packets.push(tempPacket);
+                    // }
+                    // else {
+                    //   tempPacket.writeUInt16BE(this.data[tempPacket[0]].focus * 655.35, 16);
+                    //   packets.push(tempPacket);
+                    // }
                     break;
                   }
-                  case "zoom": {
+                  case "zoom": { //Doesn't seem to work
+                    if(commandList.isValid(command.payload.data.zoomSpeed)) {
+                      tempPacket.writeInt16BE(parseFloat(command.payload.data.zoomSpeed) * 20.48, 16);
+                      //packets.push(tempPacket);
+                    }
+                    else {
+                      tempPacket.writeInt16BE(this.data[tempPacket[0]].zoomSpeed * 20.48, 16);
+                     // packets.push(tempPacket);
+                    }
                     break;
                   }
                 }
               }
-
-
-
-
-
               break;
             }
             case "camera": {
+              for(var subDomain in commandList.cameraOptions.cameraFeature) {
+                var tempPacket = new Buffer.alloc(24).fill(0);
+                tempPacket[0] = parseInt(command.payload.data.cameraId);
+                tempPacket[1] = commandList.cameraOptions.adjustmentDomain[domain];
+                tempPacket[2] = commandList.cameraOptions.cameraFeature[subDomain];
+                if(command.payload.data.isRelative === undefined || command.payload.data.isRelative === null) {tempPacket[3] = 0;}else{tempPacket[3] = command.payload.data.isRelative ? 1:0;}
+
+                switch(subDomain) {
+                  case "lowerGain": {
+                    if(commandList.isValid(command.payload.data.overallGain)) {
+                      commandList.cameraOptions.setParameter.overallGain.copy(tempPacket, 4);
+                     
+                      var value = commandList.cameraOptions.cameraFeature.lowerGainValues[command.payload.data.overallGain];
+                      if(commandList.isValid(value) == false) {
+                        value = parseInt(command.payload.data.overallGain);
+                      }
+
+                      tempPacket.writeUInt16BE(value, 16);
+                      packets.push(tempPacket);         
+                    }
+                    break;
+                  }
+                  case "gain": {
+                    if(commandList.isValid(command.payload.data.overallGain)) {
+                      commandList.cameraOptions.setParameter.overallGain.copy(tempPacket, 4);
+
+                      var value = commandList.cameraOptions.cameraFeature.gainValues[command.payload.data.overallGain];
+                      if(commandList.isValid(value) == false) {
+                        value = parseInt(command.payload.data.overallGain);
+                      }
+
+                      tempPacket.writeUInt16BE(value, 16);
+                      packets.push(tempPacket);         
+                    }
+                    break;
+                  }
+                  case "whiteBalance": {
+                    if(commandList.isValid(command.payload.data.whiteBalance)) {
+                      commandList.cameraOptions.setParameter.whiteBalance.copy(tempPacket, 4);
+                      tempPacket.writeUInt16BE(parseInt(command.payload.data.whiteBalance), 16);
+                      packets.push(tempPacket);
+                    }
+                    break;
+                  }
+                  case "shutter": {          
+                    if(commandList.isValid(command.payload.data.shutter)) {
+                      commandList.cameraOptions.setParameter.shutter.copy(tempPacket, 4);
+                      var value = commandList.cameraOptions.cameraFeature.shutterValues[command.payload.data.shutter];
+                      if(commandList.isValid(value) == false) {
+                        value = parseInt(command.payload.data.shutter);
+                      }
+                      tempPacket.writeUInt16BE(value, 18);
+                      packets.push(tempPacket);         
+                    }
+                    break;
+                  }
+                }
+              }
               break;
             }
             case "chip": {
@@ -287,8 +358,8 @@ module.exports = {
           msgs.push(msg);
         }
 
-        console.log(msgs);
-        return [msgs];
+        //console.log(msgs);
+        return msgs;
       }
     }
   },

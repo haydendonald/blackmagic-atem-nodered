@@ -169,35 +169,51 @@ module.exports = function(RED)
                 }
                 else {
                     var success = cmd.sendData(msg, commands);
-                    if(success != null) {
-                        switch(success.direction) {
-                            //The data was stored and should just be returned
-                            case "node": {
-                                if(success.command != null) {
-                                    if(typeof success.command.payload.data === "string" || success.command.payload.data instanceof String) {
-                                        node.sendStatus("red", "Internal Error", success.command.payload.data);
-                                    }
-                                    else {
-                                        success.command.topic = "command";
-                                        messageCallback(success.command);
-                                    }
-                                }
-                                else {node.sendStatus("red", "Internal Error", "The returned data was null");}
-                                break;
-                            }
-                            //The data needs to be requested from the server
-                            case "server": {
-                                //Generate the packet
-                                var nameBuffer = new Buffer.from(success.name);
-                                sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, success.command.packet]))); 
 
-                                break;
-                            }
-                            default: {
-                                console.log("Internal Error: Unsupported direction");
-                                break;
+                    //Valid request
+                    if(success != null) {
+                        //If we get a singular request convert it to an array
+                        if(Array.isArray(success) == false) {
+                            success = [success];
+                        }
+
+                        for(var i in success) {
+                            var payload = success[i];
+                            console.log(payload);
+                            switch(payload.direction) {
+                                //The data was stored and should just be returned
+                                case "node": {
+                                    if(payload.command != null) {
+                                        if(typeof payload.command.payload.data === "string" || payload.command.payload.data instanceof String) {
+                                            node.sendStatus("red", "Internal Error", payload.command.payload.data);
+                                        }
+                                        else {
+                                            payload.command.topic = "command";
+                                            messageCallback(payload.command);
+                                        }
+                                    }
+                                    else {node.sendStatus("red", "Internal Error", "The returned data was null");}
+                                    break;
+                                }
+                                //The data needs to be requested from the server
+                                case "server": {
+                                    //Generate the packet
+                                    var nameBuffer = new Buffer.from(payload.name);
+                                    sendBuffer.push(generatePacket(Buffer.concat([nameBuffer, payload.command.packet]))); 
+
+                                    break;
+                                }
+                                default: {
+                                    console.log("Internal Error: Unsupported direction");
+                                    break;
+                                }
                             }
                         }
+
+
+
+
+
                     }
                     else {
                         node.sendStatus("red", "Internal Error", "The packet was null");
