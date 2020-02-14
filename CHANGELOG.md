@@ -1,5 +1,9 @@
 # Changelog
 
+## 1.7.3
+### Bug fixes
+* Attempted fix to the camera not stating gain values correctly
+
 ## 1.7.2
 ### Bug fixes
 * Changed the iris flag from 0x03 to 0x02 as the ATEM seems to have updated this value
