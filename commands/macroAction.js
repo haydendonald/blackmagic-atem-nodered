@@ -34,9 +34,10 @@ module.exports = {
       }
     }
     else {
-      this.data[data.readUInt16BE(2)].running = data[0].toString(2)[0] == "1";
-      this.data[data.readUInt16BE(2)].waiting = data[0].toString(2)[1] == "1";
-      this.data[data.readUInt16BE(2)].isLooping = data[1].toString(2)[0] == "1";
+      //This causes a crash for some reason
+      // this.data[data.readUInt16BE(2)].running = data[0].toString(2)[0] == "1";
+      // this.data[data.readUInt16BE(2)].waiting = data[0].toString(2)[1] == "1";
+      // this.data[data.readUInt16BE(2)].isLooping = data[1].toString(2)[0] == "1";
     }
 
     command.payload.cmd = this.cmd;
