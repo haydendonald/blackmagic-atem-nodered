@@ -119,7 +119,29 @@ module.exports = {
       saturation: new Buffer([0x80, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00])
     }
   },
-
+  audioMixer: {
+    inputTypes: {
+      externalvideo: 0x00,
+      mediaplayer: 0x01,
+      externalaudio: 0x02
+    },
+    plugTypes: {
+      internal: 0x00,
+      sdi: 0x01,
+      hdmi: 0x02,
+      component: 0x03,
+      composite: 0x04,
+      svideo: 0x05,
+      xlr: 0x20,
+      aesebu: 0x40,
+      rca: 0x80
+    },
+    mixOptions: {
+      off: 0x00,
+      on: 0x01,
+      afv: 0x02
+    }
+  },
   packets: {
       requestHandshake: new Buffer([
         0x10, 0x14, 0x00, 0x00, //The two last bits need to be a random id
@@ -171,7 +193,9 @@ module.exports = {
       transitionMix: require("./transitionMix.js"),
       superSourceBox: require("./superSourceBoxPre8_0.js"),
       superSourceBox: require("./superSourceBox8_0.js"),
-      cameraControl: require("./cameraControl.js")
+      cameraControl: require("./cameraControl.js"),
+      audioMixerInput: require("./audioMixerInput.js"),
+      audioMixerMonitor: require("./audioMixerMonitor.js")
       //superSource: require("./superSource.js")
   },
   //Return the get for set and set for get command name

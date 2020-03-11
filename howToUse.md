@@ -499,6 +499,111 @@ var msg = {
 ```
 
 
+## Audio Mixer input (Get/Set)
+Contorls a audio mixer input
+- `cmd` "audioMixerInput"
+- `data` Array[audioMixerID]
+- `id` The ID of this audio mixer input
+- `input` A object containing the video input relevent to this audio input (See inputProperty for more information)
+- `type` The type of channel
+- `fromMediaPlayer` Is this channel from the media player?
+- `plugType` The type of plug this channel comes from
+- `mixOption` What is the mix option
+- `volume` The volume of the channel 0-100%
+
+### Example message from the ATEM
+```
+var msg = {
+    "payload": {
+        "cmd": "audioMixerInput",
+        "data": {
+            //Mixer Channel
+            1: {
+                "id": 1,
+                "input": [inputProperty Object],
+                "type": "externalVideo",
+                "fromMediaPlayer": false,
+                "plugType": "sdi",
+                "mixOption": "off",
+                "volume": 50,
+                "balance": 0
+            },
+            2: {
+                ....
+            }
+        }
+    }
+}
+```
+
+## Audio Mixer Monitor (Get/Set)
+Contorls a audio mixer input
+- `cmd` "audioMixerMonitor"
+- `data` 
+- `enabled` If the audio monitor is enabled
+- `volume` The volume of the audio monitor (0-100%)
+- `muteEnabled` If the audio monitor is muted
+- `soloEnabled` If the audio monitor is set to solo
+- `soloInput` The solo input of the monitor where `id` is the id of the selected input and `input` is the audioMixerInput object of the input (See audioMixerInput for more)
+- `dimEnabled` If the dim is enabled
+
+### Example message from the ATEM
+```
+var msg = {
+    "payload": {
+        "cmd": "audioMixerMonitor",
+        "data": {
+            "enabled": true,
+            "volume": 100,
+            "muteEnabled": false,
+            "soloEnabled": true,
+            "soloInput": {
+                "id": 1,
+                "input": [audioMixerInput Object]
+            },
+            "dimEnabled": false
+        }
+    }
+}
+```
+
+### Example request to from the ATEM
+```
+//Request to change the solo input and set the volume to half
+var msg = {
+    "payload": {
+        "cmd": "audioMixerMonitor",
+        "data": {
+            "enabled": true,
+            "volume": 50,
+            "muteEnabled": false,
+            "soloEnabled": true,
+            "soloInput": 1 or "soloInput": "CAM1", //Both are valid
+            "dimEnabled": false
+        }
+    }
+```
+
+### Example request to from the ATEM
+```
+//Request channel 1 to be half volume
+var msg = {
+    "payload": {
+        "cmd": "audioMixerInput",
+        "data": {
+            //You can pass either a raw id or a input containing it's id or short/long name
+            "id": 1,
+            "input": {
+                "id": 1,
+                "shortName": "CAM1"
+            },
+            "volume": 50,
+            "balance": 0
+        }
+    }
+```
+
+
 ## Version (Get)
 The current version of the ATEM
 ### cmd = "version"

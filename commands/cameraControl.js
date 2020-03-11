@@ -82,33 +82,25 @@ module.exports = {
       case commandList.cameraOptions.adjustmentDomain.camera: {
         switch(data[2]) {
           case commandList.cameraOptions.cameraFeature.lowerGain: {
-            // for(var parameter in commandList.cameraOptions.cameraFeature.lowerGainValues) {
-            //   if(commandList.cameraOptions.cameraFeature.lowerGainValues[parameter] == data.readUInt16BE(16)) {
-            //     this.data[data[0]].overallGain = parameter;
-            //     break;
-            //   }
-            //   else {
-            //     this.data[data[0]].overallGain = data.readUInt16BE(16);
-            //   }
-            // }
+            for(var parameter in commandList.cameraOptions.cameraFeature.lowerGainValues) {
+              if(commandList.cameraOptions.cameraFeature.lowerGainValues[parameter] == data.readUInt16BE(16)) {
+                this.data[data[0]].overallGain = parameter;
+                break;
+              }
+              else {
+                this.data[data[0]].overallGain = data.readUInt16BE(16);
+              }
+            }
             break;
           }
-          case commandList.cameraOptions.cameraFeature.gain: {
-            //Debug
-            if(data[0] == 1) {
-              console.log("CAM: " + data[0] + "VAL:" + data.readInt16BE(16));
-            }
-            
+          case commandList.cameraOptions.cameraFeature.gain: {            
             for(var parameter in commandList.cameraOptions.cameraFeature.gainValues) {
-              //console.log(commandList.cameraOptions.cameraFeature.gainValues[parameter]);
               if(commandList.cameraOptions.cameraFeature.gainValues[parameter] == data.readUInt16BE(16)) {
                 this.data[data[0]].overallGain = parameter;   
-                //console.log(parameter);
                 break;     
               }
               else {
                 this.data[data[0]].overallGain = data.readUInt16BE(16);
-                //console.log(data[3] + ":" + data.readUInt16BE(16));
               }
             }
             break;
