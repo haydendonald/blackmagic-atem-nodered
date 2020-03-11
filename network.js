@@ -335,33 +335,48 @@ module.exports = function(RED)
 
             clearInterval(heartBeatInterval);
             server = udp.createSocket('udp4');
-            server.bind(port);
-            sendMessage(commands.packets.disconnect);
-            connectionAttempts++;
-            node.sendStatus("yellow", "Connecting");
-            server.once("message", function(message, rinfo) {
-                var connectionFlag = message[12];
-                if(connectionFlag == commands.flags.connect) {
-                    if(Buffer.compare(message.slice(0, 4), commands.packets.handshakeAccepted) === 0) {
-                        sendMessage(commands.packets.handshakeAnswerback);
-                        updateConnectionState(commands.connectionStates.initializing); 
-                        node.sendStatus("yellow", "Gathering Information");
-                        server.on("message", handleIncoming);
+
+            //Bind server events
+            server.on("error", function(error) {
+                switch(error.code) {
+                    case "EADDRNOTAVAIL": {
+                        sendError("Server error", "Address is not avalible. Check port is avaliable");
+                        break;
+                    }
+                    default: {
+                        sendError("Server error", "An error occured: " + error.code);
                     }
                 }
-                else if(connectionFlag == commands.flags.full) {updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: The ATEM reported that it's full");}
-                else {
-                    updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: Misunderstood connection state: " + connectionFlag);
-                }
             });
-            sendMessage(commands.packets.requestHandshake);
-            updateConnectionState(commands.connectionStates.connecting);
-            setTimeout(function() {
-                if(connectionState == commands.connectionStates.connecting) {
-                    updateConnectionState(commands.connectionStates.disconnected);
-                    sendError("Failed to connect", "Could not connect to the ATEM: Timeout");
-                }
-            }, 2000);
+
+            server.bind(function() {
+                sendMessage(commands.packets.disconnect);
+                connectionAttempts++;
+                node.sendStatus("yellow", "Connecting");
+                server.once("message", function(message, rinfo) {
+                    var connectionFlag = message[12];
+                    if(connectionFlag == commands.flags.connect) {
+                        if(Buffer.compare(message.slice(0, 4), commands.packets.handshakeAccepted) === 0) {
+                            sendMessage(commands.packets.handshakeAnswerback);
+                            updateConnectionState(commands.connectionStates.initializing); 
+                            node.sendStatus("yellow", "Gathering Information");
+                            server.on("message", handleIncoming);
+                        }
+                    }
+                    else if(connectionFlag == commands.flags.full) {updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: The ATEM reported that it's full");}
+                    else {
+                        updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: Misunderstood connection state: " + connectionFlag);
+                    }
+                });
+                sendMessage(commands.packets.requestHandshake);
+                updateConnectionState(commands.connectionStates.connecting);
+                setTimeout(function() {
+                    if(connectionState == commands.connectionStates.connecting) {
+                        updateConnectionState(commands.connectionStates.disconnected);
+                        sendError("Failed to connect", "Could not connect to the ATEM: Timeout");
+                    }
+                }, 2000);
+            });
         }
         connect();
 
