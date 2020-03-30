@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.9.0
+### Bug fixes
+* Fixed a major bug where adding multiple ATEMs would cause overlapping and invalid memory
+
+## 1.8.0
+### Features
+* Added audioMixerInput support
+* Added audioMixerMonitor support
+
 ## 1.7.3
 ### Bug fixes
 * Attempted fix to the camera not stating gain values correctly

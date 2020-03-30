@@ -1,6 +1,6 @@
-var udp = require('dgram');
-var ping = require("ping");
-var commands = require("./commands/commandList.js");
+const commandList = require("./commands/commandList.js");
+const udp = require('dgram');
+const ping = require("ping");
 
 module.exports = function(RED)
 {
@@ -9,7 +9,10 @@ module.exports = function(RED)
     {
         RED.nodes.createNode(this, config);
         var node = this;
-       // var name = config.name;
+
+        var commands = new commandList.list();
+        var packets = new commandList.packets();
+
         var ipAddress = config.ipAddress;
         var port = 9910;
         var server = null;
@@ -21,7 +24,7 @@ module.exports = function(RED)
         var messageTime = 0;
         var connectionAttempts = 0;
         var lastSentError = "";
-        var connectionState = commands.connectionStates.disconnected;
+        var connectionState = commandList.connectionStates.disconnected;
         var messageCallbacks = [];
         var statusCallbacks = [];
         var sendBuffer = [];
@@ -59,9 +62,9 @@ module.exports = function(RED)
             server = null;
             sessionId = null;
             localPacketId = 1;
-            commands.close();
+            commandList.close(commands);
             receiveBuffer = [];
-            connectionState = commands.connectionStates.disconnected;
+            connectionState = commandList.connectionStates.disconnected;
         }
 
         //Send a message to the subscribed nodes (appears on the flow)
@@ -92,11 +95,11 @@ module.exports = function(RED)
             if(state != connectionState) {
                 var msg = {
                     "topic": "status",
-                    "payload": {"connectionStatus": Object.keys(commands.connectionStates)[state]}
+                    "payload": {"connectionStatus": Object.keys(commandList.connectionStates)[state]}
                 }
                 switch(state) {
-                    case commands.connectionStates.disconnected: {
-                        if(connectionState == commands.connectionStates.connected){node.error("Disconnected from ATEM @ " + ipAddress);}
+                    case commandList.connectionStates.disconnected: {
+                        if(connectionState == commandList.connectionStates.connected){node.error("Disconnected from ATEM @ " + ipAddress);}
                         node.sendStatus("red", "Disconnected");
                         closeConnection();
 
@@ -110,18 +113,18 @@ module.exports = function(RED)
                         }
                         break;
                     }
-                    case commands.connectionStates.connected: {
+                    case commandList.connectionStates.connected: {
                         connectionAttempts = 0;
                         messageTime = 0;
                         node.sendStatus("green", "Connected");
-                        if(connectionState != commands.connectionStates.connected){node.log("Connected to ATEM @ " + ipAddress);}
+                        if(connectionState != commandList.connectionStates.connected){node.log("Connected to ATEM @ " + ipAddress);}
 
                         //Send out all the inital information
                         var cmds = [];
-                        for(var key in commands.list) {
+                        for(var key in commands) {
                             var cmd = {
                                 "topic": "initial",
-                                "payload": commands.list[key].afterInit(commands)
+                                "payload": commands[key].afterInit(commands)
                             }
                             if(cmd.payload != false) {
                                 cmds.push(cmd);
@@ -132,9 +135,9 @@ module.exports = function(RED)
 
                         //Check for heartbeat every second
                         heartBeatInterval = setInterval(function() {
-                            if(connectionState == commands.connectionStates.connected) {
+                            if(connectionState == commandList.connectionStates.connected) {
                                 if(messageTime > 5) {
-                                    updateConnectionState(commands.connectionStates.disconnected);
+                                    updateConnectionState(commandList.connectionStates.disconnected);
                                 }else{messageTime++;}
                             }
                         }, 300);
@@ -148,8 +151,8 @@ module.exports = function(RED)
 
         //Process incoming message object (this does no validation so this needs to be done before calling this fn)
         this.send = function(msg, sender) {
-            if(connectionState == commands.connectionStates.connected) {
-                var cmd = commands.findCommand(msg.payload.cmd);
+            if(connectionState == commandList.connectionStates.connected) {
+                var cmd = commandList.findCommand(msg.payload.cmd, commands);
                 if(cmd == null) {
                     if(msg.payload.cmd.toUpperCase() == "RAW") {
                         //Build the raw packet to be sent
@@ -208,11 +211,6 @@ module.exports = function(RED)
                                 }
                             }
                         }
-
-
-
-
-
                     }
                     else {
                         node.sendStatus("red", "Internal Error", "The packet was null");
@@ -249,7 +247,7 @@ module.exports = function(RED)
                         "payload": {
                             "type": undefined,
                             "raw": {
-                                "flag": commands.findFlag(flag)
+                                "flag": commandList.findFlag(flag)
                             },
                             "data": {}
                         }
@@ -262,16 +260,16 @@ module.exports = function(RED)
                     command.payload.raw.packet = cmds[i]
 
                     switch(connectionState) {
-                        case commands.connectionStates.initializing: {
-                            var cmd = commands.findCommand(name);
+                        case commandList.connectionStates.initializing: {
+                            var cmd = commandList.findCommand(name, commands);
                             if(cmd != null) {
                                 cmd.initializeData(cmds[i].slice(8, length), flag, commands, messageCallbacks);
                             }
                             break;
                         }
-                        case commands.connectionStates.connected: {
+                        case commandList.connectionStates.connected: {
                             //Check if the command exists in the supported list
-                            var cmd = commands.findCommand(name);
+                            var cmd = commandList.findCommand(name, commands);
                             if(cmd != null) {
                                 if(cmd.processData(cmds[i].slice(8, length), flag, command, commands)) {
                                     messageCallback(command);
@@ -296,7 +294,7 @@ module.exports = function(RED)
             processReceiveBuffer();
         }, 1);
         sendInterval = setInterval(function() {
-            if(sendBuffer[0] !== undefined && sendBuffer[0] !== null && connectionState == commands.connectionStates.connected) {
+            if(sendBuffer[0] !== undefined && sendBuffer[0] !== null && connectionState == commandList.connectionStates.connected) {
                 //Send the message and clear it from the buffer
                 sendMessage(sendBuffer[0]);
                 sendBuffer.splice(0, 1);
@@ -324,14 +322,20 @@ module.exports = function(RED)
             var randomId = Math.floor((Math.random() * 32767) + 1);
             var sessionId = new Buffer.alloc(2);
             sessionId.writeInt16BE(randomId, 0);
-            commands.packets.disconnect[2] = sessionId[0];
-            commands.packets.disconnect[3] = sessionId[1];
-            commands.packets.requestHandshake[2] = sessionId[0];
-            commands.packets.requestHandshake[3] = sessionId[1];
-            commands.packets.handshakeAnswerback[2] = sessionId[0];
-            commands.packets.handshakeAnswerback[3] = sessionId[1];
-            commands.packets.handshakeAccepted[2] = sessionId[0];
-            commands.packets.handshakeAccepted[3] = sessionId[1];
+
+            //Update our packets
+            packets.disconnect[2] = sessionId[0];
+            packets.disconnect[3] = sessionId[1];
+
+
+            packets.requestHandshake[2] = sessionId[0];
+            packets.requestHandshake[3] = sessionId[1];
+            packets.handshakeAnswerback[2] = sessionId[0];
+            packets.handshakeAnswerback[3] = sessionId[1];
+
+
+            packets.handshakeAccepted[2] = sessionId[0];
+            packets.handshakeAccepted[3] = sessionId[1];
 
             clearInterval(heartBeatInterval);
             server = udp.createSocket('udp4');
@@ -350,29 +354,29 @@ module.exports = function(RED)
             });
 
             server.bind(function() {
-                sendMessage(commands.packets.disconnect);
+                sendMessage(packets.disconnect);
                 connectionAttempts++;
                 node.sendStatus("yellow", "Connecting");
                 server.once("message", function(message, rinfo) {
                     var connectionFlag = message[12];
-                    if(connectionFlag == commands.flags.connect) {
-                        if(Buffer.compare(message.slice(0, 4), commands.packets.handshakeAccepted) === 0) {
-                            sendMessage(commands.packets.handshakeAnswerback);
-                            updateConnectionState(commands.connectionStates.initializing); 
+                    if(connectionFlag == commandList.flags.connect) {
+                        if(Buffer.compare(message.slice(0, 4), packets.handshakeAccepted) === 0) {
+                            sendMessage(packets.handshakeAnswerback);
+                            updateConnectionState(commandList.connectionStates.initializing); 
                             node.sendStatus("yellow", "Gathering Information");
                             server.on("message", handleIncoming);
                         }
                     }
-                    else if(connectionFlag == commands.flags.full) {updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: The ATEM reported that it's full");}
+                    else if(connectionFlag == commandList.flags.full) {updateConnectionState(commandList.connectionStates.disconnected); sendError("Could not connect", "Could not connect: The ATEM reported that it's full");}
                     else {
-                        updateConnectionState(commands.connectionStates.disconnected); sendError("Could not connect", "Could not connect: Misunderstood connection state: " + connectionFlag);
+                        updateConnectionState(commandList.connectionStates.disconnected); sendError("Could not connect", "Could not connect: Misunderstood connection state: " + connectionFlag);
                     }
                 });
-                sendMessage(commands.packets.requestHandshake);
-                updateConnectionState(commands.connectionStates.connecting);
+                sendMessage(packets.requestHandshake);
+                updateConnectionState(commandList.connectionStates.connecting);
                 setTimeout(function() {
-                    if(connectionState == commands.connectionStates.connecting) {
-                        updateConnectionState(commands.connectionStates.disconnected);
+                    if(connectionState == commandList.connectionStates.connecting) {
+                        updateConnectionState(commandList.connectionStates.disconnected);
                         sendError("Failed to connect", "Could not connect to the ATEM: Timeout");
                     }
                 }, 2000);
@@ -380,8 +384,11 @@ module.exports = function(RED)
         }
         connect();
 
+        var check = false;
+        var datas = [];
         //Handle the incoming messages from the ATEM
         var handleIncoming = function(message, rinfo) {
+            if(check == true){return;}
             var length = ((message[0] & 0x07) << 8) | message[1];
             if(length == rinfo.size) {
                 var flag = message[0] >> 3;
@@ -396,8 +403,8 @@ module.exports = function(RED)
 
                 //Switch the command flag sent from the ATEM
                 switch(flag) {
-                    case commands.flags.heartbeat: {
-                        updateConnectionState(commands.connectionStates.connected);
+                    case commandList.flags.heartbeat: {
+                        updateConnectionState(commandList.connectionStates.connected);
                     }
                 }
 
@@ -414,8 +421,8 @@ module.exports = function(RED)
 
                 //Switch based on our connection state
                 switch(connectionState) {
-                    case commands.connectionStates.initializing: 
-                    case commands.connectionStates.connected: {
+                    case commandList.connectionStates.initializing: 
+                    case commandList.connectionStates.connected: {
                         receiveBuffer.push(message);
                         break;
                     }

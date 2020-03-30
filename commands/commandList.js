@@ -142,7 +142,30 @@ module.exports = {
       afv: 0x02
     }
   },
-  packets: {
+
+  //Check if a variable is not null or undefined
+  exists: function(variable) {
+    return variable !== null && variable !== undefined;
+  },
+
+  //Is the variable valid?
+  isValid(variable) {
+    return variable !== undefined && variable !== null;
+  },
+
+  //Find a flag
+  findFlag(id) {
+    for(var key in this.flags) {
+        if(this.flags[key] == parseInt(id)) {
+            return key;
+        }
+    }
+    return id;
+  },
+
+  //Packets object
+  packets: function() {
+    return {
       requestHandshake: new Buffer([
         0x10, 0x14, 0x00, 0x00, //The two last bits need to be a random id
         0x00, 0x00, 0x00, 0x00,
@@ -167,73 +190,67 @@ module.exports = {
         0x04, 0x00, 0x00, 0x00,
         0x00, 0x00, 0x00, 0x00
       ])
+    }
   },
-  //Check if a variable is not null or undefined
-  exists: function(variable) {
-    return variable !== null && variable !== undefined;
-  },
-  list: {
-      version: require("./version.js"),
-      time: require("./time.js"),
-      programInput: require("./programInput.js"),
-      previewInput: require("./previewInput.js"),
-      inputProperty: require("./inputProperty.js"),
-      performCut: require("./performCut.js"),
-      performAuto: require("./performAuto.js"),
-      transitionPosition: require("./transitionPosition.js"),
-      upstreamKeyer: require("./upstreamKeyer.js"),
-      downstreamKeyer: require("./downstreamKeyer.js"),
-      auxSource: require("./auxSource.js"),
-      macroAction: require("./macroAction.js"),
-      downstreamKeyerConfig: require("./downstreamKeyerConfig.js"),
-      upstreamKeyerConfig: require("./upstreamKeyerConfig.js"),
-      warning: require("./warning.js"),
-      topology: require("./topology.js"),
-      macroProperties: require("./macroProperties.js"),
-      transitionMix: require("./transitionMix.js"),
-      superSourceBox: require("./superSourceBoxPre8_0.js"),
-      superSourceBox: require("./superSourceBox8_0.js"),
-      cameraControl: require("./cameraControl.js"),
-      audioMixerInput: require("./audioMixerInput.js"),
-      audioMixerMonitor: require("./audioMixerMonitor.js")
+
+  list: function() {
+    return {
+      version: require("./version.js").object(),
+      time: require("./time.js").object(),
+      programInput: require("./programInput.js").object(),
+      previewInput: require("./previewInput.js").object(),
+      inputProperty: require("./inputProperty.js").object(),
+      performCut: require("./performCut.js").object(),
+      performAuto: require("./performAuto.js").object(),
+      transitionPosition: require("./transitionPosition.js").object(),
+      upstreamKeyer: require("./upstreamKeyer.js").object(),
+      downstreamKeyer: require("./downstreamKeyer.js").object(),
+      auxSource: require("./auxSource.js").object(),
+      macroAction: require("./macroAction.js").object(),
+      downstreamKeyerConfig: require("./downstreamKeyerConfig.js").object(),
+      upstreamKeyerConfig: require("./upstreamKeyerConfig.js").object(),
+      warning: require("./warning.js").object(),
+      topology: require("./topology.js").object(),
+      macroProperties: require("./macroProperties.js").object(),
+      transitionMix: require("./transitionMix.js").object(),
+      superSourceBox: require("./superSourceBoxPre8_0.js").object(),
+      superSourceBox: require("./superSourceBox8_0.js").object(),
+      cameraControl: require("./cameraControl.js").object(),
+      audioMixerInput: require("./audioMixerInput.js").object(),
+      audioMixerMonitor: require("./audioMixerMonitor.js").object()
       //superSource: require("./superSource.js")
+    }
   },
+
   //Return the get for set and set for get command name
-  findInvertedDirectionName(name) {
-    for(var key in this.list) {
-      if(this.list[key].get.toUpperCase() == name.toUpperCase()) {
-        return this.list[key].set;
+  findInvertedDirectionName(name, commands) {
+    for(var key in commands) {
+      if(commands[key].get.toUpperCase() == name.toUpperCase()) {
+        return commands[key].set;
       }
-      if(this.list[key].set.toUpperCase() == name.toUpperCase()) {
-        return this.list[key].get;
+      if(commands[key].set.toUpperCase() == name.toUpperCase()) {
+        return commands[key].get;
       }
     }
   },
-  findFlag(id) {
-    for(var key in this.flags) {
-        if(this.flags[key] == parseInt(id)) {
-            return key;
-        }
-    }
-    return id;
-  },
-  findCommand(name){
-    for(var key in this.list) {
-        if(this.list[key].get.toUpperCase() == name.toUpperCase()) {
-            return this.list[key];
+
+  //Find a command and return it
+  findCommand(name, commands){
+    for(var key in commands) {
+        if(commands[key].get.toUpperCase() == name.toUpperCase()) {
+            return commands[key];
         }
         if(key.toUpperCase() == name.toUpperCase()) {
-            return this.list[key];
+            return commands[key];
         }
     }
     return null;
   },
-  close(){
-    for(var key in this.list) {
-      this.list[key].close();
+
+  //Ask all commands to close and clear their data
+  close(commands){
+    for(var key in commands) {
+      commands[key].close();
     }
-  },
-  isValid(variable) {
-    return variable !== undefined && variable !== null;
   }
 }
