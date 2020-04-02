@@ -536,6 +536,25 @@ var msg = {
 }
 ```
 
+### Example request to the ATEM
+```
+//Request channel 1 to be half volume
+var msg = {
+    "payload": {
+        "cmd": "audioMixerInput",
+        "data": {
+            //You can pass either a raw id or a input containing it's id or short/long name
+            "id": 1,
+            "input": {
+                "id": 1,
+                "shortName": "CAM1"
+            },
+            "volume": 50,
+            "balance": 0
+        }
+    }
+```
+
 ## Audio Mixer Monitor (Get/Set)
 Contorls a audio mixer input
 - `cmd` "audioMixerMonitor"
@@ -567,7 +586,7 @@ var msg = {
 }
 ```
 
-### Example request to from the ATEM
+### Example request to the ATEM
 ```
 //Request to change the solo input and set the volume to half
 var msg = {
@@ -584,21 +603,68 @@ var msg = {
     }
 ```
 
-### Example request to from the ATEM
+## Multiviewer Input (Get/Set) (Currently not tested!)
+Contorls a audio mixer input
+- `cmd` "multiViewerInput"
+- `data` An array containing each multiviewer
+
+- `Data object`
+- `id` The multiviewer id
+- `windows` An array containing each window
+
+- `Windows object`
+- `index` The window index number
+- `inputId` The input id set to the window
+- `videoSource` The video source set to the window (See inputProperty for more information)
+
+### Example message from the ATEM
 ```
-//Request channel 1 to be half volume
 var msg = {
     "payload": {
-        "cmd": "audioMixerInput",
+        "cmd": "multiViewerInput",
         "data": {
-            //You can pass either a raw id or a input containing it's id or short/long name
+            "id": 0,
+            "windows": {
+                "index": 0,
+                "inputId": 0,
+                "videoSource": [inputProperty Object]
+            },
+            {
+                "index": 1,
+                "inputId": 2,
+                "videoSource": [inputProperty Object]
+            }
+            ...
+        },
+        {
             "id": 1,
+            "windows": {
+                "index": 0,
+                "inputId": 0,
+                "videoSource": [inputProperty Object]
+            },
+            ...
+        }
+        ...
+    }
+}
+```
+
+### Example request to the ATEM
+```
+//Request to set multiviewer 1, window 1, to input 1
+var msg = {
+    "payload": {
+        "cmd": "multiViewerInput",
+        "data": {
+            "multiViewerId": 0,
+            "windowIndex": 0,
             "input": {
                 "id": 1,
                 "shortName": "CAM1"
-            },
-            "volume": 50,
-            "balance": 0
+            }
+            or
+            "inputId": 1
         }
     }
 ```

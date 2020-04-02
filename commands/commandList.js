@@ -217,7 +217,8 @@ module.exports = {
       superSourceBox: require("./superSourceBox8_0.js").object(),
       cameraControl: require("./cameraControl.js").object(),
       audioMixerInput: require("./audioMixerInput.js").object(),
-      audioMixerMonitor: require("./audioMixerMonitor.js").object()
+      audioMixerMonitor: require("./audioMixerMonitor.js").object(),
+      multiViewerInput: require("./multiViewerInput.js").object()
       //superSource: require("./superSource.js")
     }
   },

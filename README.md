@@ -21,6 +21,11 @@ Provides control and feedback from a Blackmagic ATEM device
 - Raw Commands
 - Transition Mix
 - Tallying on the MEs and Keyers
+- Audio Mixer Input
+- Audio Mixer Monitor
+- Camera Control
+- Super Source Box
+- Multi Viewer Input
 
 
 Thanks to SKAARHOJ for the research into the commands! This is also where you can find a detail listing if you wish to use the raw command feature

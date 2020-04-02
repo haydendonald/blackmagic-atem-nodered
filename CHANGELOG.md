@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.0.0
+### Features
+* Added multiViewerInput support
+
 ## 1.9.0
 ### Bug fixes
 * Fixed a major bug where adding multiple ATEMs would cause overlapping and invalid memory
