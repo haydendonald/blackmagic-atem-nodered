@@ -3,7 +3,7 @@
 ## 2.1.0
 ### Bug fixes
 * Fixed a critical bug which was causing a crash in the multiViewerInput when finding the input source
-
+* Fixed a bug which causes a crash occasionally on redeploy in the preview and program commands
 
 ## 2.0.0
 ### Features
