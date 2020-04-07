@@ -1,5 +1,10 @@
 # Changelog
 
+## 2.1.0
+### Bug fixes
+* Fixed a critical bug which was causing a crash in the multiViewerInput when finding the input source
+
+
 ## 2.0.0
 ### Features
 * Added multiViewerInput support

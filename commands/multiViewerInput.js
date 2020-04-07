@@ -18,12 +18,12 @@ module.exports = {
       if(this.data[data[0]] === undefined || this.data[data[0]] === null) {
         this.data[data[0]] = {
           "id": data[0],
-          "windows": {}
+          "windows": []
         };
       }
 
       //Add the window information
-      this.data[data[0]].windows = {
+      this.data[data[0]].windows[data[1]] = {
         "index": data[1],
         "inputId": data.readUInt16BE(2),
         "videoSource": commands.inputProperty.findInput(data.readUInt16BE(2))
@@ -103,13 +103,6 @@ module.exports = {
     },
     //What todo once we are connected
     afterInit(commands) {
-      //Update the video source
-      for(var i in this.data) {
-        for(var j in this.data[i]) {
-          this.data[i].windows[j].videoSource = commands.inputProperty.findInput(this.data[i].windows[j].inputid);
-        }
-      }
-      
       return {
         "cmd": this.cmd,
         "data": this.data
