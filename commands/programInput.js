@@ -44,19 +44,6 @@ module.exports = {
   
           messageCallbacks[i](msg);
         }
-
-        // for(var i in messageCallbacks) {
-        //     var msg = {
-        //       "topic": "command",
-        //       "payload": {
-        //         "cmd": commands.inputProperty.cmd,
-        //         "data": commands.inputProperty.data,
-        //       }
-        //     }
-        //   messageCallbacks[i](msg);
-        // }
-
-
       }
   
       this.data[command.payload.data.ME] = command.payload.data;

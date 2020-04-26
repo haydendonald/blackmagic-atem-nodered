@@ -191,15 +191,15 @@ module.exports = {
           this.data.inputs[key].tally = count > 0;
   
           if(sendTallyUpdates) {
-            for(var i in messageCallbacks) {
+            for(var i = 0; i < messageCallbacks.length; i++) {
               var msg = {
-                "topic": "command",
-                "payload": {
-                  "cmd": this.cmd,
-                  "data": this.data
+                  "topic": "command",
+                  "payload": {
+                    "cmd": commands.inputProperty.cmd,
+                    "data": commands.inputProperty.data,
                 }
               }
-              //msg.payload.data[key] = this.data.inputs[key];
+      
               messageCallbacks[i](msg);
             }
           }
@@ -226,19 +226,6 @@ module.exports = {
         }
   
         this.data.inputs[key].tally = count > 0;
-  
-        // if(sendTallyUpdates && wasLive) {
-        //   for(var i in messageCallbacks) {
-        //       var msg = {
-        //         "topic": "command",
-        //         "payload": {
-        //           "cmd": this.cmd,
-        //           "data": this.data
-        //         }
-        //       }
-        //       //messageCallbacks[i](msg);
-        //     }
-        //   }
         }
       
   
@@ -254,19 +241,6 @@ module.exports = {
           }
   
           this.data.inputs[key].tally = count > 0;
-  
-          // if(sendTallyUpdates) {   
-          //   for(var i in messageCallbacks) {
-          //     var msg = {
-          //       "topic": "command",
-          //       "payload": {
-          //         "cmd": this.cmd,
-          //         "data": this.data
-          //       }
-          //     }
-          //     //messageCallbacks[i](msg);
-          //   }
-          // }
         }
       }
     },
