@@ -166,7 +166,7 @@ module.exports = {
         if(this.data.inputs[key].shortName == inputId) {return this.data.inputs[key];}
       }
     },
-    updateTallysKeyer(id, type, inputSource, state, sendTallyUpdates) {
+    updateTallysKeyer(id, type, inputSource, state, sendTallyUpdates, commands) {
       if(inputSource == null || inputSource == undefined){return;}
       for(var key in this.data.inputs) {
         if(this.data.inputs[key].id == inputSource.id) {

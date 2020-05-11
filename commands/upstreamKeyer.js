@@ -28,8 +28,8 @@ module.exports = {
   
       //command.payload.data[["keyer" + ((data[0] * 10) + (data[1]))]] = this.data["keyer" + ((data[0] * 10) + (data[1]))];
   
-      commands.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyFill", this.data[((data[0] * 10) + (data[1]))].fillSource,  data[2] == 0x01, sendTallyUpdates);
-      commands.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyKey", this.data[((data[0] * 10) + (data[1]))].keySource,  data[2] == 0x01, sendTallyUpdates);
+      commands.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyFill", this.data[((data[0] * 10) + (data[1]))].fillSource,  data[2] == 0x01, sendTallyUpdates, commands);
+      commands.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyKey", this.data[((data[0] * 10) + (data[1]))].keySource,  data[2] == 0x01, sendTallyUpdates, commands);
       
       command.payload.data = this.data;
       return true;
@@ -90,8 +90,8 @@ module.exports = {
       if(this.data[keyerId] != undefined || this.data[keyerId] != null) {
         this.data[keyerId].fillSource = fillSource;
         this.data[keyerId].keySource = keySource;
-        commands.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyFill", this.data[keyerId].fillSource,  this.data[keyerId].state, false);
-        commands.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyKey", this.data[keyerId].keySource, this.data[keyerId].state, false);
+        commands.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyFill", this.data[keyerId].fillSource,  this.data[keyerId].state, false, commands);
+        commands.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyKey", this.data[keyerId].keySource, this.data[keyerId].state, false, commands);
       }
     },
     //What todo once we are connected

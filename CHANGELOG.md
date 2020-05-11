@@ -1,5 +1,9 @@
 # Changelog
 
+## 2.1.1
+### Bug fixes
+* Fixed a bug where a crash would occur when updating the tally values on a keyer update
+
 ## 2.1.0
 ### Bug fixes
 * Fixed a critical bug which was causing a crash in the multiViewerInput when finding the input source

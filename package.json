@@ -1,6 +1,6 @@
 {
   "name": "blackmagic-atem-nodered",
-  "version": "2.1.0",
+  "version": "2.1.1",
   "description": "Provides control of a BlackMagic ATEM",
   "main": "",
   "repository": {

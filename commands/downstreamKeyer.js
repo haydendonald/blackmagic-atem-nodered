@@ -26,8 +26,8 @@ module.exports = {
       this.data[data[0]].isAutoTransitioning = data[3] == 0x01;
       this.data[data[0]].framesRemaining = data[4];
   
-      commands.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyFill", this.data[data[0]].fillSource,  data[1] == 0x01, sendTallyUpdates);
-      commands.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyKey", this.data[data[0]].keySource,  data[1] == 0x01, sendTallyUpdates);
+      commands.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyFill", this.data[data[0]].fillSource,  data[1] == 0x01, sendTallyUpdates, commands);
+      commands.inputProperty.updateTallysKeyer(data[0], "downstreamKeyerTallyKey", this.data[data[0]].keySource,  data[1] == 0x01, sendTallyUpdates, commands);
       //command.payload.data["keyer" + data[0]] = this.data["keyer" + data[0]];
       command.payload.data = this.data;
       return true;
@@ -84,8 +84,8 @@ module.exports = {
       if(keyer != undefined && keyer != null) {
         keyer.fillSource = fillSource;
         keyer.keySource = keySource;
-        commands.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyFill", this.data[keyerId].fillSource, keyer.state, false);
-        commands.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyKey", this.data[keyerId].keySource, keyer.state, false);
+        commands.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyFill", this.data[keyerId].fillSource, keyer.state, false, commands);
+        commands.inputProperty.updateTallysKeyer(keyerId, "downstreamKeyerTallyKey", this.data[keyerId].keySource, keyer.state, false, commands);
       }
     },
     //What todo once we are connected
