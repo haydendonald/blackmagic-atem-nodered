@@ -34,6 +34,10 @@ module.exports = {
     },
     updateTallys(commands, command) {
       for(var i in commands.inputProperty.data.inputs) {
+        if(this.data[i] !== undefined) {
+          var inTransition = this.data[i].inTransition;
+        }
+
         this.data[i] = {
           "inTransition": {
             "tally": false,
@@ -137,7 +141,6 @@ module.exports = {
         }
       }
 
-
       for(var i = 0; i < messageCallbacks.length; i++) {
         var msg = {
             "topic": "command",
@@ -148,7 +151,8 @@ module.exports = {
         }
 
         messageCallbacks[i](msg);
-      }   
+      }
+      
       return true;
     },
 

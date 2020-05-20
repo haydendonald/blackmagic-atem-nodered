@@ -1,5 +1,13 @@
 # Changelog
 
+# 2.2.3
+### Revert
+* Removed feature added in 2.2.2 as this didn't work correctly
+
+# 2.2.2
+### Bug fixes
+* Added check to see if the tallys have actually updated. If not don't send out the tally updates
+
 # 2.2.0
 ### Features
 * Added send time setting to disable the time command being sent to the output as it can be a bit annoying
