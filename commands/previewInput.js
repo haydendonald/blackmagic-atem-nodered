@@ -28,18 +28,34 @@ module.exports = {
   
       //Send the input properties of the updated inputs
       if(sendTallyUpdates && flag==commandList.flags.initializing) {
-
-        for(var i = 0; i < messageCallbacks.length; i++) {
-          var msg = {
-              "topic": "command",
-              "payload": {
-                "cmd": commands.inputProperty.cmd,
-                "data": commands.inputProperty.data,
+        if(this.messageCallbacks !== undefined) {
+          for(var i = 0; i < messageCallbacks.length; i++) {
+            var msg = {
+                "topic": "command",
+                "payload": {
+                  "cmd": this.cmd,
+                  "data": this.data
+              }
             }
+    
+            messageCallbacks[i](msg);
           }
-
-          messageCallbacks[i](msg);
         }
+
+
+
+
+        // for(var i = 0; i < messageCallbacks.length; i++) {
+        //   var msg = {
+        //       "topic": "command",
+        //       "payload": {
+        //         "cmd": commands.inputProperty.cmd,
+        //         "data": commands.inputProperty.data,
+        //     }
+        //   }
+
+        //   messageCallbacks[i](msg);
+        // }
       }
   
       this.data[command.payload.data.ME] = command.payload.data;

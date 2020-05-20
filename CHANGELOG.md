@@ -1,5 +1,10 @@
 # Changelog
 
+# 2.2.6
+### Bug fixes
+* Fixed a crash event
+* messageCallbacks bug showed it's face again
+
 # 2.2.3
 ### Revert
 * Removed feature added in 2.2.2 as this didn't work correctly

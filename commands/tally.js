@@ -18,19 +18,14 @@ module.exports = {
     sendData(command, commands) {
       var msg = {
         "direction": "node",
-        "name": this.set,
         "command": {
           "payload": {
             "cmd": this.cmd,
-            "data": "The data was not filled"
+            "data": this.data
           }
         }
       }
-      //If the data is null return the value
-      if(!commandList.exists(command.payload.data) || command.payload.data === {}) {
-        msg.command.payload.data = this.data;
-        return msg;
-      }
+      return msg;
     },
     updateTallys(commands, command) {
       for(var i in commands.inputProperty.data.inputs) {
@@ -141,16 +136,18 @@ module.exports = {
         }
       }
 
-      for(var i = 0; i < messageCallbacks.length; i++) {
-        var msg = {
-            "topic": "command",
-            "payload": {
-              "cmd": this.cmd,
-              "data": this.data
+      if(this.messageCallbacks !== undefined) {
+        for(var i = 0; i < messageCallbacks.length; i++) {
+          var msg = {
+              "topic": "command",
+              "payload": {
+                "cmd": this.cmd,
+                "data": this.data
+            }
           }
+  
+          messageCallbacks[i](msg);
         }
-
-        messageCallbacks[i](msg);
       }
       
       return true;
