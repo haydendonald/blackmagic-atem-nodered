@@ -11,9 +11,9 @@ module.exports = {
     },
     initializeData(data, flag, commands) {
       var command = {"payload":{"data":{}}};
-      this.processData(data, flag, command, commands);
+      this.processData(data, flag, command, commands, false);
     },
-    processData(data, flag, command, commands) {
+    processData(data, flag, command, commands, sendTallyUpdates=true) {
       if(this.data[data[0]] === undefined || this.data[data[0]] === null){this.data[data[0]] = {};}
   
       //This file works pre version 8.0
@@ -35,6 +35,8 @@ module.exports = {
   
       command.payload.cmd = this.cmd;
       command.payload.data = this.data;
+
+      if(sendTallyUpdates === true) {commands.tally.updateTallys(commands);}
   
       return true;
     },

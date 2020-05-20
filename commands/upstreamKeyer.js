@@ -16,7 +16,7 @@ module.exports = {
     processData(data, flag, command, commands, sendTallyUpdates=true) {
       command.payload.cmd = this.cmd;
   
-      if(this.data[((data[0] * 10) + (data[1]))] == undefined) {
+      if(this.data[((data[0] * 10) + (data[1]))] === undefined) {
         this.data[((data[0] * 10) + (data[1]))] = {};
         this.data[((data[0] * 10) + (data[1]))].fillSource = undefined;
         this.data[((data[0] * 10) + (data[1]))].keySource = undefined;
@@ -25,13 +25,9 @@ module.exports = {
       this.data[((data[0] * 10) + (data[1]))].ME = data[0];
       this.data[((data[0] * 10) + (data[1]))].id = data[1];
       this.data[((data[0] * 10) + (data[1]))].state = data[2] == 0x01;
-  
-      //command.payload.data[["keyer" + ((data[0] * 10) + (data[1]))]] = this.data["keyer" + ((data[0] * 10) + (data[1]))];
-  
-      commands.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyFill", this.data[((data[0] * 10) + (data[1]))].fillSource,  data[2] == 0x01, sendTallyUpdates, commands);
-      commands.inputProperty.updateTallysKeyer(((data[0] * 10) + (data[1])), "upstreamKeyerTallyKey", this.data[((data[0] * 10) + (data[1]))].keySource,  data[2] == 0x01, sendTallyUpdates, commands);
       
       command.payload.data = this.data;
+      commands.tally.updateTallys(commands);
       return true;
     },
     sendData(command, commands) {
@@ -90,8 +86,6 @@ module.exports = {
       if(this.data[keyerId] != undefined || this.data[keyerId] != null) {
         this.data[keyerId].fillSource = fillSource;
         this.data[keyerId].keySource = keySource;
-        commands.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyFill", this.data[keyerId].fillSource,  this.data[keyerId].state, false, commands);
-        commands.inputProperty.updateTallysKeyer(keyerId, "upstreamKeyerTallyKey", this.data[keyerId].keySource, this.data[keyerId].state, false, commands);
       }
     },
     //What todo once we are connected

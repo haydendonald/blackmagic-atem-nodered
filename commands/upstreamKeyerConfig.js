@@ -15,16 +15,13 @@ module.exports = {
     },
     processData(data, flag, command, commands) {
       //Put this data in the upstream keyer (Each keyerid is the meid + 1 * the keyer id + 1)
-      // commandList.list.upstreamKeyer.addKeyerInformation(((data[0] * 10) + (data[1])), commandList.list.inputProperty.findInput(data.readUInt16BE(6)), 
-      //   commandList.list.inputProperty.findInput(data.readUInt16BE(8)), commandList);
-  
       var keyerID = ((data[0] * 10) + (data[1]));
       this.data[keyerID] = {};
       this.data[keyerID].fillSourceID = data.readUInt16BE(6);
       this.data[keyerID].fillSource = commands.inputProperty.findInput(data.readUInt16BE(6));
       this.data[keyerID].keySourceID = data.readUInt16BE(8);
       this.data[keyerID].keySource = commands.inputProperty.findInput(data.readUInt16BE(8));
-      commands.upstreamKeyer.addKeyerInformation(keyerID, this.data[keyerID.fillSource], this.data[keyerID.keySource], commands);
+      commands.upstreamKeyer.addKeyerInformation(keyerID, this.data[keyerID].fillSource, this.data[keyerID].keySource, commands);
       return false;
     },
     sendData(command, commands) {

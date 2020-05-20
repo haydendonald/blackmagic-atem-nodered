@@ -84,59 +84,10 @@ module.exports = {
         "ME2PlusFillSources": data[33].toString(2)[1] == "1",
       };
   
-      //Check if the input tallys exist if they do don't update the
-      if(this.data.inputs[command.payload.data.id] == undefined || this.data.inputs[command.payload.data.id] == null) {
-        command.payload.data.inTransition = false;
-        command.payload.data.framesRemaining = false;
-        command.payload.data.position = false;
-  
-        command.payload.data.tallys = {};
-        command.payload.data.tallys.programTally = {
-          "ID": [],
-          "state": false
-        }
-  
-        command.payload.data.tallys.previewTally = {
-          "ID": [],
-          "state": false
-        }
-  
-        command.payload.data.tallys.downstreamKeyerTallyFill = {
-          "ID": [],
-          "state": false
-        }
-  
-        command.payload.data.tallys.downstreamKeyerTallyKey = {
-          "ID": [],
-          "state": false
-        }
-  
-        command.payload.data.tallys.upstreamKeyerTallyFill = {
-          "ID": [],
-          "state": false
-        }
-  
-        command.payload.data.tallys.upstreamKeyerTallyKey = {
-          "ID": [],
-          "state": false
-        }
-      }
-      else {
-        command.payload.data.tallys = {};
-        command.payload.data.tallys.programTally = this.data.inputs[command.payload.data.id].tallys.programTally;
-        command.payload.data.tallys.previewTally = this.data.inputs[command.payload.data.id].tallys.previewTally;
-        command.payload.data.tallys.downstreamKeyerTallyFill = this.data.inputs[command.payload.data.id].tallys.downstreamKeyerTallyFill;
-        command.payload.data.tallys.downstreamKeyerTallyKey = this.data.inputs[command.payload.data.id].tallys.downstreamKeyerTallyKey;
-        command.payload.data.tallys.upstreamKeyerTallyFill = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyFill;
-        command.payload.data.tallys.upstreamKeyerTallyKey = this.data.inputs[command.payload.data.id].tallys.upstreamKeyerTallyKey;   
-      }
-  
       this.data.inputs[command.payload.data.id] = command.payload.data;
       command.payload.cmd = this.cmd;
       command.payload.data = this.data;
-      //command.payload.data[data.readUInt16BE(0)] = this.data.inputs[data.readUInt16BE(0)];
-  
-      //if(flag != commandList.flags.sync){return false;}
+
       return true;
     },
     sendData(command, commands) {
@@ -164,102 +115,6 @@ module.exports = {
       //Short name
       for(var key in this.data.inputs) {
         if(this.data.inputs[key].shortName == inputId) {return this.data.inputs[key];}
-      }
-    },
-    updateTallysKeyer(id, type, inputSource, state, sendTallyUpdates, commands) {
-      if(inputSource == null || inputSource == undefined){return;}
-      for(var key in this.data.inputs) {
-        if(this.data.inputs[key].id == inputSource.id) {
-          for(var ID in this.data.inputs[key]["tallys"][type].ID) {
-              if(!state) {
-                this.data.inputs[key]["tallys"][type].ID.splice(ID, 1);
-              }
-          }
-          if(state) {
-            if(!this.data.inputs[key]["tallys"][type].ID.includes(id)) {
-              this.data.inputs[key]["tallys"][type].ID.push(id);
-            }
-          }
-  
-          this.data.inputs[key]["tallys"][type].state = this.data.inputs[key]["tallys"][type].ID.length > 0;
-  
-          var count = 0;
-          for(var key2 in this.data.inputs[key]["tallys"]) {
-            count += this.data.inputs[key]["tallys"][key2].ID.length;
-          }
-  
-          this.data.inputs[key].tally = count > 0;
-  
-          if(sendTallyUpdates) {
-            for(var i = 0; i < messageCallbacks.length; i++) {
-              var msg = {
-                  "topic": "command",
-                  "payload": {
-                    "cmd": commands.inputProperty.cmd,
-                    "data": commands.inputProperty.data,
-                }
-              }
-      
-              messageCallbacks[i](msg);
-            }
-          }
-        }
-      }
-    },
-    updateTallysME(id, type, inputSource, sendTallyUpdates) {
-      if(inputSource == null || inputSource == undefined){return;}
-      //Find the last input that was live on this ME and remove it
-      for(var key in this.data.inputs) {
-        var wasLive = false;
-        for(var ID in this.data.inputs[key]["tallys"][type].ID) {
-          if(this.data.inputs[key]["tallys"][type].ID[ID] == id && this.data.inputs[key].id != inputSource.id) {
-            wasLive = true;
-            this.data.inputs[key]["tallys"][type].ID.splice(ID, 1);
-          }
-        }
-        
-        this.data.inputs[key]["tallys"][type].state = this.data.inputs[key]["tallys"][type].ID.length > 0;
-  
-        var count = 0;
-        for(var key2 in this.data.inputs[key]["tallys"]) {
-          count += this.data.inputs[key]["tallys"][key2].ID.length;
-        }
-  
-        this.data.inputs[key].tally = count > 0;
-        }
-      
-  
-      //Make this current input live on the tally
-      for(var key in this.data.inputs) {
-        if(this.data.inputs[key].id == inputSource.id) {
-          this.data.inputs[key]["tallys"][type].ID.push(id);
-          this.data.inputs[key]["tallys"][type].state = true;
-  
-          var count = 0;
-          for(var key2 in this.data.inputs[key]["tallys"]) {
-            count += this.data.inputs[key]["tallys"][key2].ID.length;
-          }
-  
-          this.data.inputs[key].tally = count > 0;
-        }
-      }
-    },
-    updateTallysTransitionPosition(ME, inTransition, framesRemaining, position) {
-      for(var key in this.data.inputs) {
-        var MEExists = false;
-        for(var i in this.data.inputs[key].tallys.programTally.ID) {
-          if(i == ME){MEExists = true;}
-        }
-        for(var i in this.data.inputs[key].tallys.previewTally.ID) {
-          if(i == ME){MEExists = true;}
-        }
-  
-        if(MEExists == true) {
-          if(framesRemaining < 1) {inTransition = false;}
-          this.data.inputs[key].inTransition = inTransition;
-          this.data.inputs[key].framesRemaining = framesRemaining;
-          this.data.inputs[key].position = position;
-        }
       }
     },
     //What todo once we are connected

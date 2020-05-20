@@ -12,9 +12,9 @@ module.exports = {
     },
     initializeData(data, flag, commands) {
       var command = {"payload":{"data":{}}};
-      this.processData(data, flag, command, commands);
+      this.processData(data, flag, command, commands, false);
     },
-    processData(data, flag, command, commands) {
+    processData(data, flag, command, commands, sendTallyUpdates=true) {
       this.data = {
         "fillSourceID": data.readUInt16BE(0),
         "fillSource": commands.inputProperty.findInput(data.readUInt16BE(0)),
@@ -42,8 +42,8 @@ module.exports = {
   
       command.payload.cmd = this.cmd;
       command.payload.data = this.data;
-  
-      console.log(this.data);
+
+      if(sendTallyUpdates === true) {commands.tally.updateTallys(commands);}
   
       return true;
     },

@@ -1,5 +1,12 @@
 # Changelog
 
+# 2.2.0
+### Features
+* Added send time setting to disable the time command being sent to the output as it can be a bit annoying
+* The tallying system has been adjusted to run via a tally command
+### Bug fixes
+* Fixed a bug where the upstream keyers were having their config cleared due to a typo
+
 ## 2.1.1
 ### Bug fixes
 * Fixed a bug where a crash would occur when updating the tally values on a keyer update

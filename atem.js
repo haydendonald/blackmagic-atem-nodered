@@ -7,6 +7,7 @@ module.exports = function(RED)
         var network = RED.nodes.getNode(config.network);
         var node = this;
         var outputMode = config.outputMode;
+        var sendTime = config.sendTime;
         var sendInitial = config.sendInitialData == "yes";
         var sendStatus = config.sendStatusUpdates == "yes";
         node.status({fill:"orange",shape:"dot",text:"Connecting..."});
@@ -46,24 +47,32 @@ module.exports = function(RED)
                 switch(outputMode) {
                   case "reply": { //This does not appear to be working and has been disabled
                     if(message.payload.type == "stateChanged" && msg.sender == this) {
-                      node.send(message);
+                      if(!(sendTime === "no" && message.payload.cmd === "time")) {
+                        node.send(message);
+                      }
                     }
                     break;
                   }
                   case "status": {
                     if(message.payload.type == "stateChanged") {
-                      node.send(message);
+                      if(!(sendTime === "no" && message.payload.cmd === "time")) {
+                        node.send(message);
+                      }
                     }
                     break;
                   }
                   case "supported": {
                     if(message.payload.cmd !== "raw") {
-                      node.send(message);
+                      if(!(sendTime === "no" && message.payload.cmd === "time")) {
+                        node.send(message);
+                      }
                     }
                     break;
                   }
                   case "all": {
-                    node.send(message);
+                    if(!(sendTime === "no" && message.payload.cmd === "time")) {
+                      node.send(message);
+                    }
                     break;
                   }
                 }

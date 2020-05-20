@@ -11,9 +11,9 @@ module.exports = {
     },
     initializeData(data, flag, commands) {
       var command = {"payload":{"data":{}}};
-      this.processData(data, flag, command, commands);
+      this.processData(data, flag, command, commands, false);
     },
-    processData(data, flag, command, commands) {
+    processData(data, flag, command, commands, sendTallyUpdates=true) {
       command.payload.cmd = this.cmd;
       command.payload.data.ME = data[0];
       command.payload.data.inTransition = data[1] == 0x01;
@@ -24,9 +24,9 @@ module.exports = {
       //Pass this information to the current live inputs on the ME
       commands.programInput.updateTransitionPosition(data[0], data[1] == 0x01, data[2], data.readUInt16BE(4));
       commands.previewInput.updateTransitionPosition(data[0], data[1] == 0x01, data[2], data.readUInt16BE(4));
-      commands.inputProperty.updateTallysTransitionPosition(data[0], data[1] == 0x01, data[2], data.readUInt16BE(4));
       command.payload.data = this.data;
-      //if(flag != commandList.flags.sync){return false;}
+
+      if(sendTallyUpdates === true) {commands.tally.updateTallys(commands);}
       return true;
     },
     sendData(command, commands) {

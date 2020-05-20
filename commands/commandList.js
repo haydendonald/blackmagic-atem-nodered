@@ -218,7 +218,8 @@ module.exports = {
       cameraControl: require("./cameraControl.js").object(),
       audioMixerInput: require("./audioMixerInput.js").object(),
       audioMixerMonitor: require("./audioMixerMonitor.js").object(),
-      multiViewerInput: require("./multiViewerInput.js").object()
+      multiViewerInput: require("./multiViewerInput.js").object(),
+      tally: require("./tally.js").object()
       //superSource: require("./superSource.js")
     }
   },

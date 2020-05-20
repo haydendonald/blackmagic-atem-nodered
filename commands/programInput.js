@@ -22,13 +22,12 @@ module.exports = {
       command.payload.data.videoSource = commands.inputProperty.findInput(data.readUInt16BE(2));
   
       //Add the transition position params if they don't exist
-      if(this.data[command.payload.data.ME] == undefined || this.data[command.payload.data.ME] == null) {
+      if(this.data[command.payload.data.ME] === undefined || this.data[command.payload.data.ME] === null) {
         command.payload.data.inTransition = false;
         command.payload.data.framesRemaining = false;
         command.payload.data.position = false;
+
       }
-  
-      commands.inputProperty.updateTallysME(data[0], "programTally", command.payload.data.videoSource, sendTallyUpdates);
   
       //Send the input properties of the updated inputs
       if(sendTallyUpdates && flag==commandList.flags.initializing) {
@@ -48,7 +47,8 @@ module.exports = {
   
       this.data[command.payload.data.ME] = command.payload.data;
       command.payload.data = this.data;
-      //return flag==commandList.flags.sync;
+
+      if(sendTallyUpdates === true) {commands.tally.updateTallys(commands);}
       return true;
     },
     sendData(command, commands) {
