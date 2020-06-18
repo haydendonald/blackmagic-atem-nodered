@@ -137,7 +137,7 @@ module.exports = {
       }
 
       if(this.messageCallbacks !== undefined) {
-        for(var i = 0; i < messageCallbacks.length; i++) {
+        for(var i = 0; i < this.messageCallbacks.length; i++) {
           var msg = {
               "topic": "command",
               "payload": {
@@ -146,7 +146,7 @@ module.exports = {
             }
           }
   
-          messageCallbacks[i](msg);
+          this.messageCallbacks[i](msg);
         }
       }
       
