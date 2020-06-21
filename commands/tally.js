@@ -11,7 +11,7 @@ module.exports = {
       this.data = {};
     },
     initializeData(data, flag, commands, msgCallbacks) {
-      messageCallbacks = msgCallbacks;
+      this.messageCallbacks = msgCallbacks;
     },
     processData(data, flag, command, commands) {
     },
@@ -154,7 +154,8 @@ module.exports = {
     },
 
     //What todo once we are connected
-    afterInit(commands) {
+    afterInit(commands, msgCallbacks) {
+      this.messageCallbacks = msgCallbacks;
       this.data = {};
       this.updateTallys(commands);
       return {

@@ -124,7 +124,7 @@ module.exports = function(RED)
                         for(var key in commands) {
                             var cmd = {
                                 "topic": "initial",
-                                "payload": commands[key].afterInit(commands)
+                                "payload": commands[key].afterInit(commands, messageCallbacks)
                             }
                             if(cmd.payload != false) {
                                 cmds.push(cmd);

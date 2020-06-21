@@ -1,5 +1,9 @@
 # Changelog
 
+# 2.2.8
+### Bug fixes
+* Fixed tally not sending updates to output
+
 # 2.2.6
 ### Bug fixes
 * Fixed a crash event
