@@ -1,4 +1,8 @@
 # Changelog
+# 2.3.0
+### Bug fixes
+* Fixed an issue with the ATEM constellation switcher not staying connected due to a bug on BlackMagic's side where they are flooding multiviewer commands
+* Fixed an issue with the ATEM constellation switcher not initializing correctly. This was also a problem with other switchers but wasn't as prominent. The node will now enter the "connected" state regardless of if the atem has finished it's initialization. ***This could be a breaking change if your project cannot handle the initialization data***
 
 # 2.2.8
 ### Bug fixes
