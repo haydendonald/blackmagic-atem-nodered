@@ -22,13 +22,21 @@ module.exports = {
         };
       }
 
+      //Ignore unchanged
+      var inputId = data.readUInt16BE(2);
+      var videoSource = commands.inputProperty.findInput(data.readUInt16BE(2));
+      if(this.data[data[0]].windows[data[1]]) {
+        if(this.data[data[0]].windows[data[1]].inputId != inputId){return false;}
+        if(this.data[data[0]].windows[data[1]].videoSource == videoSource){return false;}
+      }
+
       //Add the window information
       this.data[data[0]].windows[data[1]] = {
         "index": data[1],
-        "inputId": data.readUInt16BE(2),
-        "videoSource": commands.inputProperty.findInput(data.readUInt16BE(2))
+        "inputId": inputId,
+        "videoSource": videoSource
       };
-  
+
       command.payload.cmd = this.cmd;
       command.payload.data = this.data;
       return true;
